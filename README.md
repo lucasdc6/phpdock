@@ -7,26 +7,40 @@ $ git clone git@github.com:lucasdc6/phpenv.git
 
 2. Agregar el directorio ~/.phpenv/bin para contar con todos los ejecutables
 ```bash
-echo 'export PATH="$HOME/.phpenv/bin:$PATH"' >> ~/.bash_profile
+$ echo 'export PATH="$HOME/.phpenv/bin:$PATH"' >> ~/.bash_profile
+```
+
+3. Agregar el archivo php_global al bashrc
+```bash
+$ echo 'source ~/.phpenv/etc/php_global' >> ~/.bash_profile
 ```
 En ubuntu Ubuntu modificar ~/.bashrc
 
 En Zsh modificar ~/.zshrc
 
-3. Reiniciar la terminar para que los cambios surgan efecto.
+4. Reiniciar la terminar para que los cambios surgan efecto.
 
-Junto con el script de phpenv se van a contar con 2 script extra:
- * php, el cual funciona a modo de wrapper de las imagenes docker
-  descargadas por phpenv. El funcionamiento es mediante variables
-  de ambiente (Ver Variables de ambiente).
- * php-server
+_Opcional:_
+
+Si se desea, se pueden acortar los pasos 2 y 3, agregando solo la siguiente
+línea a su bashrc
+```bash
+$ echo 'source ~/.phpenv/etc/bash_phpenv' >> ~/.bash_profile
+```
+En ubuntu Ubuntu modificar ~/.bashrc
+
+En Zsh modificar ~/.zshrc
+
+Lo único diferente con esto, es que ademas agrega la variable de ambiente
+PHPENVPATH, para que sea más fácil el manejo de rutas.
+
 
 ## Uso
 
 Con el fin de facilitar el uso de los script php y php-server, se provee este
 script con 5 opciones relacionadas al manejo de versiones:
-  * Setear versión global
-  * Setear versión local
+  * Setear versión global (requiere reinicio de terminal)
+  * Setear versión local (no requiere reinicio de terminal)
   * Instalar una version (docker pull de los repositorios dados)
   * Listar versiones instaladas
   * Listar opciones disponibles para bajar de los repositorios
@@ -44,6 +58,34 @@ de líneas.
 Se recomieda no editar este archivo a mano.
 
 Es muy importante además **NO** eliminar dicho archivo de configuración.
+
+## Agregar repositorios propios
+
+Para agregar un repositorio propio, simplemente se deben seguir una simple regla
+para que el script pueda reconocer las imágenes.
+
+La regla a seguir, es taguear las imágenes con un nombre que contenga "cli" o
+"apache", dependiendo del tipo de imagen que sea.
+
+Las imágenes tagueadas con un "cli" en su nombre serén utilizadas por el script
+php, mientras que las "apache", serán utilizadas por el script php-server
+
+De seguir esta regla, solo hace falta agregar el repositorio de la siguiente
+manera:
+
+```bash
+  $ phpenv --add <NOMBRE DEL REPOSITORIO>
+```
+
+Por ejemplo, para agregar el repositorio oficial de php, solo hace falta
+ejecutar:
+
+```bash
+  $ phpenv --add php
+```
+
+Como se puede notar, las imágenes en este repositorio son tagueadas siguiendo la
+regla anteriormente nombrada.
 
 ## Variables de ambiente
 
