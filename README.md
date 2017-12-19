@@ -22,9 +22,10 @@ En Zsh modificar ~/.zshrc
 
 _Opcional:_
 
-Si se desea, se pueden acortar los pasos 2 y 3, agregando solo la siguiente
-línea a su bashrc
+Si se desea, se pueden acortar los pasos 2 y 3, agregando solo las siguientes
+líneas a su bashrc
 ```bash
+$ echo 'export PHPDOCKPATH="$HOME/.phpdock"' >> ~/.bash_profile
 $ echo 'source ~/.phpdock/etc/bash_phpdock' >> ~/.bash_profile
 ```
 En ubuntu Ubuntu modificar ~/.bashrc
