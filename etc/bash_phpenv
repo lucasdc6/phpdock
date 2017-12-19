@@ -1,5 +1,0 @@
-export PHPENVPATH=`realpath $0 | xargs dirname | xargs dirname`
-
-export PATH="$PATH:$PHPENVPATH/bin"
-
-source $PHPENVPATH/etc/php_global
