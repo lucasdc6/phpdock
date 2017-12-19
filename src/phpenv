@@ -26,14 +26,16 @@ function show_help {
                                                By default show php-cli versions
                                                Optionallity you can specify a php-apache version
 
+        $PROG --versions [--apache]           List all php version aviables to set
+                                               By default show php-cli versions
+                                               Optionallity you can specify a php-apache version
+
         $PROG --install[=VERSION]             Install a php version from some of repositories.
                                                Format expected: $PROG --install REPOSITORY_NAME:TAG_NAME
                                                Example: $PROG --install cespi/php-5.3:cli
                                                If not specify a VERSION, it's taken from the following config files respectively:
                                                   * .envrc
                                                   * $MAIN_PATH/etc/php_global
-
-        $PROG --versions                      List all php version aviables to set
 
   Repositories:
         $PROG --repositories                  List all availables repositories
@@ -150,8 +152,10 @@ function list_php_versions {
 
 # Function to get installed versions
 function show_versions {
-  docker images | awk '{print $1":"$2}' | grep "php" | grep "cli"
-    #docker images | awk '{print $1":"$2}' | awk -v pattern1="$IMAGE:[[:print:]]+cli[[:print:]]*" '$1 ~ pattern1'
+  for IMAGE in "${PHP_IMAGES[@]}"
+  do
+    docker images | awk -v image=$IMAGE -v tag=$1 '($1 == image) && ($2 ~ tag) {print $1":"$2;}'
+  done
 }
 
 # Function to get avaiables images from the repositories
@@ -235,7 +239,8 @@ while true ; do
         shift;;
     --install)
         install_php_version $2
-        shift 2;;
+        shift 2
+        exit 0;;
     --repositories)
         list_repos
         shift
@@ -249,14 +254,15 @@ while true ; do
         shift 2
         exit 0;;
     --versions)
-        show_versions
-        shift ;;
+        OPT="versions"
+        shift;;
     --apache)
         APACHE=true
         shift;;
     -h|--help)
         show_help
-        shift ;;
+        shift 
+        exit 0;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac
@@ -270,6 +276,7 @@ case "$OPT" in
     else
       change_php_local $PARAM
     fi
+    exit 0
     ;;
   global)
     if [ $APACHE = true ]
@@ -278,6 +285,7 @@ case "$OPT" in
     else
       change_php_global $PARAM
     fi
+    exit 0
     ;;
   list)
     if [ $APACHE = true ]
@@ -286,5 +294,15 @@ case "$OPT" in
     else
       list_php_versions "cli"
     fi
+    exit 0
+    ;;
+  versions)
+    if [ $APACHE = true ]
+    then
+      show_versions "apache"
+    else
+      show_versions "cli"
+    fi
+    exit 0
     ;;
 esac
