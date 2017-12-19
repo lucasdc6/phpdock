@@ -14,30 +14,36 @@ PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
 function show_help {
   cat <<FILE
   Usage:
-        $PROG --local[=VERSION]     Set or show the local php version (apply to directorie and all subdirectories)
+        $PROG --local[=VERSION] [--apache]    Set or show the local php version (apply to directorie and all subdirectories)
+                                               By default set a php-cli version
+                                               Optionallity you can specify a php-apache version
 
-        $PROG --global[=VERSION]    Set or show the global php version
+        $PROG --global[=VERSION] [--apache]   Set or show the global php version
+                                               By default set a php-cli version
+                                               Optionallity you can specify a php-apache version
 
-        $PROG --list                List all available versions
+        $PROG --list [--apache]               List all available versions
+                                               By default show php-cli versions
+                                               Optionallity you can specify a php-apache version
 
-        $PROG --install[=VERSION]   Install a php version from some of repositories.
-                                     Format expected: $PROG --install REPOSITORY_NAME:TAG_NAME
-                                     Example: $PROG --install cespi/php-5.3:cli
-                                     If not specify a VERSION, it's taken from the following config files respectively:
-                                        * .envrc
-                                        * $HOME/.php_global
+        $PROG --install[=VERSION]             Install a php version from some of repositories.
+                                               Format expected: $PROG --install REPOSITORY_NAME:TAG_NAME
+                                               Example: $PROG --install cespi/php-5.3:cli
+                                               If not specify a VERSION, it's taken from the following config files respectively:
+                                                  * .envrc
+                                                  * $MAIN_PATH/etc/php_global
 
-        $PROG --versions            List all php version aviables to set
+        $PROG --versions                      List all php version aviables to set
 
   Repositories:
-        $PROG --repositories        List all availables repositories
+        $PROG --repositories                  List all availables repositories
 
-        $PROG --add REPOSITORY      Add the reposotory
+        $PROG --add REPOSITORY                Add the reposotory
 
-        $PROG --delete REPOSITORY   Delete the repository
+        $PROG --delete REPOSITORY             Delete the repository
 
   Help:
-        $PROG --help  or  -h        Display this help
+        $PROG --help  or  -h                  Display this help
 FILE
 }
 
@@ -45,7 +51,7 @@ FILE
 [ "$#" -eq 0 ] && ( show_help; exit 1)
 
 # Config getopt
-TEMP=`getopt -o h --long local::,global::,list,install::,repositories,add:,delete:,versions,help -n $PROG -- "$@"`
+TEMP=`getopt -o h --long local::,global::,list,install::,repositories,add:,delete:,versions,apache,help -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 function delete_ary_elmt {
@@ -64,13 +70,82 @@ function delete_ary_elmt {
 function change_file {
   if [ ! -e "$1" ]
   then
-    echo "export PHP_CLI_DOCKER_IMAGE=$2" > $1
-  elif grep "^export PHP_CLI_DOCKER_IMAGE=[[:print:]]*$" $1
+    echo "export $3=$2" > $1
+  elif grep "^export $3=[[:print:]]*$" $1
   then
-    sed -i -- "s/export PHP_CLI_DOCKER_IMAGE=.*/export PHP_CLI_DOCKER_IMAGE=$2/g" $1
+    sed -i -- "s/export $3=.*/export $3=$2/g" $1
   else
-    echo "export PHP_CLI_DOCKER_IMAGE=$2" >> $1
+    echo "export $3=$2" >> $1
   fi
+}
+
+# Function to change local version of php
+function change_php_local {
+  if [ "$1" ]
+  then
+    change_file ".envrc" $1 "PHP_CLI_DOCKER_IMAGE"
+    direnv allow
+    echo "Local php version setted to $2 in file .envrc"
+  elif [ -f ".envrc" ]
+  then
+    cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no local version configured for this directory"
+  fi
+}
+
+# Function to change local version of php-apache
+function change_apache_local {
+  if [ "$1" ]
+  then
+    change_file ".envrc" $1 "PHP_SERVER_DOCKER_IMAGE"
+    direnv allow
+    echo "Local apache version setted to $2 in file .envrc"
+  elif [ -f ".envrc" ]
+  then
+    cat .envrc | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no local version configured for this directory"
+  fi
+}
+
+# Function to change global version of php
+function change_php_global {
+  if [ "$1" ]
+  then
+    change_file "$MAIN_PATH/etc/php_global" $1 "PHP_CLI_DOCKER_IMAGE"
+    echo "Global php version setted to $1 in file $MAIN_PATH/etc/php_global"
+    echo -e "\nRemember restart your terminal"
+  elif [ -f "$MAIN_PATH/etc/php_global" ]
+  then
+    cat $MAIN_PATH/etc/php_global | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no global version configured"
+  fi
+}
+
+# Function to change global version of php
+function change_apache_global {
+  if [ "$1" ]
+  then
+    change_file "$MAIN_PATH/etc/php_global" $1 "PHP_SERVER_DOCKER_IMAGE"
+    echo "Global php version setted to $1 in file $MAIN_PATH/etc/php_global"
+    echo -e "\nRemember restart your terminal"
+  elif [ -f "$MAIN_PATH/etc/php_global" ]
+  then
+    cat $MAIN_PATH/etc/php_global | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no global version configured"
+  fi
+}
+
+# Function to list php versions from repositories
+function list_php_versions {
+  for IMAGE in ${PHP_IMAGES[@]}
+  do
+    echo "In $IMAGE"
+    docker_tags $IMAGE $1
+  done
 }
 
 # Function to get installed versions
@@ -101,10 +176,10 @@ function install_php_version
   then
     echo -e "php version taken from file .envrc\n"
     cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2 | xargs docker pull
-  elif [ -f "$HOME/.php_global" ]
+  elif [ -f "$MAIN_PATH/etc/php_global" ]
   then
-    echo -e "php version taken from file $HOME/.php_global\n"
-    cat ~/.php_global | cut -d= -f2 | xargs docker pull
+    echo -e "php version taken from file $MAIN_PATH/etc/php_global\n"
+    cat $MAIN_PATH/etc/php_global | cut -d= -f2 | xargs docker pull
   else
     echo "Please specify a php version"
   fi
@@ -143,55 +218,42 @@ function delete_repo
   fi
 }
 
+APACHE=false
+
 while true ; do
   case "$1" in
     --local)
-        if [ "$2" ]
-        then
-          change_file ".envrc" $2
-          direnv allow
-          #echo "Local php version setted to $2 in file .envrc"
-        elif [ -f ".envrc" ]
-        then
-          cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
-        else
-          echo "$PROG: no local version configured for this directory"
-        fi
+        OPT="local"
+        PARAM=$2
         shift 2;;
     --global)
-        if [ "$2" ]
-        then
-          change_file "$HOME/.php_global" $2
-          echo "Global php version setted to $2 in file $HOME/.php_global"
-        elif [ -f "$HOME/.php_global" ]
-        then
-          cat ~/.php_global | cut -d= -f2
-        else
-          echo "$PROG: no global version configured"
-        fi
+        OPT="global"
+        PARAM=$2
         shift 2 ;;
     --list)
-        for IMAGE in ${PHP_IMAGES[@]}
-        do
-          echo "In $IMAGE"
-          docker_tags $IMAGE cli
-        done
+        OPT="list"
         shift;;
     --install)
         install_php_version $2
         shift 2;;
     --repositories)
         list_repos
-        shift;;
+        shift
+        exit 0;;
     --add)
         add_repo $2
-        shift 2;;
+        shift 2
+        exit 0;;
     --delete)
         delete_repo $2
-        shift 2;;
+        shift 2
+        exit 0;;
     --versions)
         show_versions
         shift ;;
+    --apache)
+        APACHE=true
+        shift;;
     -h|--help)
         show_help
         shift ;;
@@ -199,3 +261,30 @@ while true ; do
     *) echo "Internal error!" ; exit 1 ;;
   esac
 done
+
+case "$OPT" in
+  local)
+    if [ $APACHE = true ]
+    then
+      change_apache_local $PARAM
+    else
+      change_php_local $PARAM
+    fi
+    ;;
+  global)
+    if [ $APACHE = true ]
+    then
+      change_apache_global $PARAM
+    else
+      change_php_global $PARAM
+    fi
+    ;;
+  list)
+    if [ $APACHE = true ]
+    then
+      list_php_versions "apache"
+    else
+      list_php_versions "cli"
+    fi
+    ;;
+esac
