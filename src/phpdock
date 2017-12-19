@@ -2,35 +2,39 @@
 
 set -e
 
-# Get the basename of script
+# Get the basename and main path of script
 PROG=`basename $0`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 # Avaiables repositories
-#PHP_IMAGES=(cespi/php-5.3 chrodriguez/php-5.6 php)
+if [ ! -f "$MAIN_PATH/etc/repositories" ]
+then
+  echo -e "$MAIN_PATH/etc/repositories missing, default value setted\nDefault value: php"
+  echo "php" > "$MAIN_PATH/etc/repositories"
+fi
 PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
 
 # Help message
 function show_help {
-  cat <<FILE
+  cat <<HELP
   Usage:
-        $PROG --local[=VERSION] [--apache]    Set or show the local php version (apply to directorie and all subdirectories)
+        $PROG --local[=VERSION] [--apache]   Set or show the local php version (apply to directorie and all subdirectories)
                                                By default set a php-cli version
                                                Optionallity you can specify a php-apache version
 
-        $PROG --global[=VERSION] [--apache]   Set or show the global php version
+        $PROG --global[=VERSION] [--apache]  Set or show the global php version
                                                By default set a php-cli version
                                                Optionallity you can specify a php-apache version
 
-        $PROG --list [--apache]               List all available versions
+        $PROG --list [--apache]              List all available versions
                                                By default show php-cli versions
                                                Optionallity you can specify a php-apache version
 
-        $PROG --versions [--apache]           List all php version aviables to set
+        $PROG --versions [--apache]          List all php version aviables to set
                                                By default show php-cli versions
                                                Optionallity you can specify a php-apache version
 
-        $PROG --install[=VERSION]             Install a php version from some of repositories.
+        $PROG --install[=VERSION]            Install a php version from some of repositories.
                                                Format expected: $PROG --install REPOSITORY_NAME:TAG_NAME
                                                Example: $PROG --install cespi/php-5.3:cli
                                                If not specify a VERSION, it's taken from the following config files respectively:
@@ -38,15 +42,15 @@ function show_help {
                                                   * $MAIN_PATH/etc/php_global
 
   Repositories:
-        $PROG --repositories                  List all availables repositories
+        $PROG --repositories                 List all availables repositories
 
-        $PROG --add REPOSITORY                Add the reposotory
+        $PROG --add REPOSITORY               Add the reposotory
 
-        $PROG --delete REPOSITORY             Delete the repository
+        $PROG --delete REPOSITORY            Delete the repository
 
   Help:
-        $PROG --help  or  -h                  Display this help
-FILE
+        $PROG --help  or  -h                 Display this help
+HELP
 }
 
 # Show help if non arguments passed to script
@@ -56,6 +60,10 @@ FILE
 TEMP=`getopt -o h --long local::,global::,list,install::,repositories,add:,delete:,versions,apache,help -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
+# Function to delete an elements from array
+# Arguments
+#   1: element
+#   2: array
 function delete_ary_elmt {
   local word=$1      # the element to search for & delete
   local aryref="$2[@]" # a necessary step since '${!$2[@]}' is a syntax error
@@ -69,6 +77,12 @@ function delete_ary_elmt {
 }
 
 # Function to update configuration's files
+# Arguments
+#   1: file to change
+#   2: version to add in file
+#   3: type (php-cli|php-apache) in env var format
+#       PHP_CLI_DOCKER_IMAGE from php-cli
+#       PHP_SERVER_DOCKER_IMAGE from php-apache
 function change_file {
   if [ ! -e "$1" ]
   then
@@ -82,13 +96,15 @@ function change_file {
 }
 
 # Function to change local version of php
+# Arguments
+#   1: version to set as local
 function change_php_local {
   if [ "$1" ]
   then
     change_file ".envrc" $1 "PHP_CLI_DOCKER_IMAGE"
     direnv allow
-    echo "Local php version setted to $2 in file .envrc"
-  elif [ -f ".envrc" ]
+    echo "Local php version setted to $1 in file .envrc"
+  elif [ -f ".envrc" ] && grep "PHP_CLI_DOCKER_IMAGE" ".envrc" > /dev/null
   then
     cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
   else
@@ -97,13 +113,15 @@ function change_php_local {
 }
 
 # Function to change local version of php-apache
+# Arguments
+#   1: version to set as local
 function change_apache_local {
   if [ "$1" ]
   then
     change_file ".envrc" $1 "PHP_SERVER_DOCKER_IMAGE"
     direnv allow
-    echo "Local apache version setted to $2 in file .envrc"
-  elif [ -f ".envrc" ]
+    echo "Local apache version setted to $1 in file .envrc"
+  elif [ -f ".envrc" ] && grep "PHP_SERVER_DOCKER_IMAGE" ".envrc" > /dev/null
   then
     cat .envrc | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
   else
@@ -112,36 +130,42 @@ function change_apache_local {
 }
 
 # Function to change global version of php
+# Arguments
+#   1: version to set as global
 function change_php_global {
   if [ "$1" ]
   then
     change_file "$MAIN_PATH/etc/php_global" $1 "PHP_CLI_DOCKER_IMAGE"
     echo "Global php version setted to $1 in file $MAIN_PATH/etc/php_global"
     echo -e "\nRemember restart your terminal"
-  elif [ -f "$MAIN_PATH/etc/php_global" ]
+  elif [ -f "$MAIN_PATH/etc/php_global" ] && grep "PHP_CLI_DOCKER_IMAGE" $MAIN_PATH/etc/php_global > /dev/null
   then
     cat $MAIN_PATH/etc/php_global | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
   else
-    echo "$PROG: no global version configured"
+    echo "$PROG: no php global version configured"
   fi
 }
 
 # Function to change global version of php
+# Arguments
+#   1. version to set as global
 function change_apache_global {
   if [ "$1" ]
   then
     change_file "$MAIN_PATH/etc/php_global" $1 "PHP_SERVER_DOCKER_IMAGE"
     echo "Global php version setted to $1 in file $MAIN_PATH/etc/php_global"
     echo -e "\nRemember restart your terminal"
-  elif [ -f "$MAIN_PATH/etc/php_global" ]
+  elif [ -f "$MAIN_PATH/etc/php_global" ] && grep "PHP_SERVER_DOCKER_IMAGE" $MAIN_PATH/etc/php_global > /dev/null
   then
     cat $MAIN_PATH/etc/php_global | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
   else
-    echo "$PROG: no global version configured"
+    echo "$PROG: no apache global version configured"
   fi
 }
 
 # Function to list php versions from repositories
+# Arguments
+#   1: type (cli|apache)
 function list_php_versions {
   for IMAGE in ${PHP_IMAGES[@]}
   do
@@ -151,6 +175,8 @@ function list_php_versions {
 }
 
 # Function to get installed versions
+# Arguments
+#   1: type (cli|apache)
 function show_versions {
   for IMAGE in "${PHP_IMAGES[@]}"
   do
@@ -159,6 +185,9 @@ function show_versions {
 }
 
 # Function to get avaiables images from the repositories
+# Arguments
+#   1: image name
+#   2: type (cli|apache)
 function docker_tags {
   image="$1"
   tags=`wget -q https://registry.hub.docker.com/v1/repositories/${image}/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}'`
@@ -171,6 +200,8 @@ function docker_tags {
 }
 
 # Function to install a php version
+# Arguments
+#   1: full name with tag
 function install_php_version
 {
   if [ "$1" ]
@@ -189,6 +220,7 @@ function install_php_version
   fi
 }
 
+# Function to list all repos in file etc/repositories
 function list_repos
 {
   [ ${#PHP_IMAGES[@]} -eq 0 ] && (echo -e "Not repositories found.\nPlease add a repository with the option $PROG --add REPOSITORY"; exit 1)
@@ -196,6 +228,9 @@ function list_repos
   printf "\t* %s\n" "${PHP_IMAGES[@]}"
 }
 
+# Function to add a repo to array PHP_IMAGES and file etc/repositories
+# Arguments
+#   1: repository name
 function add_repo
 {
   if [[ "${PHP_IMAGES[@]}" =~ "${1}" ]]
@@ -208,11 +243,13 @@ function add_repo
   fi
 }
 
+# Function to delete a repo from array PHP_IMAGES and file etc/repositories
+# Arguments
+#   1: repository name
 function delete_repo
 {
   if [[ "${PHP_IMAGES[@]}" =~ "${1}" ]]
   then
-    #PHP_IMAGES=("${PHP_IMAGES[@]/$1}")
     delete_ary_elmt $1 PHP_IMAGES
     printf "%s\n" "${PHP_IMAGES[@]}" > $MAIN_PATH/etc/repositories
     echo "$1 deleted successfully"
@@ -222,8 +259,10 @@ function delete_repo
   fi
 }
 
+# default value of apache
 APACHE=false
 
+# Parse arguments
 while true ; do
   case "$1" in
     --local)
@@ -268,6 +307,7 @@ while true ; do
   esac
 done
 
+# Execute options with all arguments parsed
 case "$OPT" in
   local)
     if [ $APACHE = true ]
