@@ -1,18 +1,18 @@
 ## Instalación
 
-1. Clonar el repositorio en ~/.phpenv
+1. Clonar el repositorio en ~/.phpdock
 ```bash
-$ git clone git@github.com:lucasdc6/phpenv.git
+$ git clone git@github.com:lucasdc6/phpdock.git
 ```
 
-2. Agregar el directorio ~/.phpenv/bin para contar con todos los ejecutables
+2. Agregar el directorio ~/.phpdock/bin para contar con todos los ejecutables
 ```bash
-$ echo 'export PATH="$HOME/.phpenv/bin:$PATH"' >> ~/.bash_profile
+$ echo 'export PATH="$HOME/.phpdock/bin:$PATH"' >> ~/.bash_profile
 ```
 
 3. Agregar el archivo php_global al bashrc
 ```bash
-$ echo 'source ~/.phpenv/etc/php_global' >> ~/.bash_profile
+$ echo 'source ~/.phpdock/etc/php_global' >> ~/.bash_profile
 ```
 En ubuntu Ubuntu modificar ~/.bashrc
 
@@ -25,7 +25,7 @@ _Opcional:_
 Si se desea, se pueden acortar los pasos 2 y 3, agregando solo la siguiente
 línea a su bashrc
 ```bash
-$ echo 'source ~/.phpenv/etc/bash_phpenv' >> ~/.bash_profile
+$ echo 'source ~/.phpdock/etc/bash_phpdock' >> ~/.bash_profile
 ```
 En ubuntu Ubuntu modificar ~/.bashrc
 
@@ -48,7 +48,7 @@ Además se cuenta con 3 opciones para el manejo de los repositorios docker:
   * Listar repositorios
   * Agregar repositorio
   * Eliminar repositorio
-  
+
 Para el manejo de los repositorios, se cuenta con un archivo de configuración
 disponible en la el directorio etc, llamado _repositories._
 
@@ -74,14 +74,14 @@ De seguir esta regla, solo hace falta agregar el repositorio de la siguiente
 manera:
 
 ```bash
-  $ phpenv --add <NOMBRE DEL REPOSITORIO>
+  $ phpdock --add <NOMBRE DEL REPOSITORIO>
 ```
 
 Por ejemplo, para agregar el repositorio oficial de php, solo hace falta
 ejecutar:
 
 ```bash
-  $ phpenv --add php
+  $ phpdock --add php
 ```
 
 Como se puede notar, las imágenes en este repositorio son tagueadas siguiendo la
