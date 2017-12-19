@@ -32,7 +32,7 @@ En ubuntu Ubuntu modificar ~/.bashrc
 En Zsh modificar ~/.zshrc
 
 Lo único diferente con esto, es que ademas agrega la variable de ambiente
-PHPENVPATH, para que sea más fácil el manejo de rutas.
+PHPDOCKPATH, para que sea más fácil el manejo de rutas.
 
 
 ## Uso
