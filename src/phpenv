@@ -1,0 +1,201 @@
+#!/bin/bash
+
+set -e
+
+# Get the basename of script
+PROG=`basename $0`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Avaiables repositories
+#PHP_IMAGES=(cespi/php-5.3 chrodriguez/php-5.6 php)
+PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
+
+# Help message
+function show_help {
+  cat <<FILE
+  Usage:
+        $PROG --local[=VERSION]     Set or show the local php version (apply to directorie and all subdirectories)
+
+        $PROG --global[=VERSION]    Set or show the global php version
+
+        $PROG --list                List all available versions
+
+        $PROG --install[=VERSION]   Install a php version from some of repositories.
+                                     Format expected: $PROG --install REPOSITORY_NAME:TAG_NAME
+                                     Example: $PROG --install cespi/php-5.3:cli
+                                     If not specify a VERSION, it's taken from the following config files respectively:
+                                        * .envrc
+                                        * $HOME/.php_global
+
+        $PROG --versions            List all php version aviables to set
+
+  Repositories:
+        $PROG --repositories        List all availables repositories
+
+        $PROG --add REPOSITORY      Add the reposotory
+
+        $PROG --delete REPOSITORY   Delete the repository
+
+  Help:
+        $PROG --help  or  -h        Display this help
+FILE
+}
+
+# Show help if non arguments passed to script
+[ "$#" -eq 0 ] && ( show_help; exit 1)
+
+# Config getopt
+TEMP=`getopt -o h --long local::,global::,list,install::,repositories,add:,delete:,versions,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+function delete_ary_elmt {
+  local word=$1      # the element to search for & delete
+  local aryref="$2[@]" # a necessary step since '${!$2[@]}' is a syntax error
+  local arycopy=("${!aryref}") # create a copy of the input array
+  local status=1
+  for (( i = ${#arycopy[@]} - 1; i >= 0; i-- )); do # iterate over indices backwards
+    elmt=${arycopy[$i]}
+    [[ $elmt == $word ]] && unset "$2[$i]" && status=0 # unset matching elmts in orig. ary
+  done
+  return $status # return 0 if something was deleted; 1 if not
+}
+
+# Function to update configuration's files
+function change_file {
+  if [ ! -e "$1" ]
+  then
+    echo "export PHP_CLI_DOCKER_IMAGE=$2" > $1
+  elif grep "^export PHP_CLI_DOCKER_IMAGE=[[:print:]]*$" $1
+  then
+    sed -i -- "s/export PHP_CLI_DOCKER_IMAGE=.*/export PHP_CLI_DOCKER_IMAGE=$2/g" $1
+  else
+    echo "export PHP_CLI_DOCKER_IMAGE=$2" >> $1
+  fi
+}
+
+# Function to get installed versions
+function show_versions {
+  docker images | awk '{print $1":"$2}' | grep "php" | grep "cli"
+    #docker images | awk '{print $1":"$2}' | awk -v pattern1="$IMAGE:[[:print:]]+cli[[:print:]]*" '$1 ~ pattern1'
+}
+
+# Function to get avaiables images from the repositories
+function docker_tags {
+  image="$1"
+  tags=`wget -q https://registry.hub.docker.com/v1/repositories/${image}/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}'`
+
+  if [ -n "$2" ]
+  then
+    tags=` echo "${tags}" | grep "$2" `
+  fi
+  echo -e "${tags}\n"
+}
+
+# Function to install a php version
+function install_php_version
+{
+  if [ "$1" ]
+  then
+    docker pull $1
+  elif [ -f ".envrc" ]
+  then
+    echo -e "php version taken from file .envrc\n"
+    cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2 | xargs docker pull
+  elif [ -f "$HOME/.php_global" ]
+  then
+    echo -e "php version taken from file $HOME/.php_global\n"
+    cat ~/.php_global | cut -d= -f2 | xargs docker pull
+  else
+    echo "Please specify a php version"
+  fi
+}
+
+function list_repos
+{
+  [ ${#PHP_IMAGES[@]} -eq 0 ] && (echo -e "Not repositories found.\nPlease add a repository with the option $PROG --add REPOSITORY"; exit 1)
+  printf "Avaiables repositories:\n"
+  printf "\t* %s\n" "${PHP_IMAGES[@]}"
+}
+
+function add_repo
+{
+  if [[ "${PHP_IMAGES[@]}" =~ "${1}" ]]
+  then
+    echo "$1 already in use"
+  else
+    PHP_IMAGES+=("$1")
+    printf "%s\n" "${PHP_IMAGES[@]}" > $MAIN_PATH/etc/repositories
+    echo "$1 added successfully"
+  fi
+}
+
+function delete_repo
+{
+  if [[ "${PHP_IMAGES[@]}" =~ "${1}" ]]
+  then
+    #PHP_IMAGES=("${PHP_IMAGES[@]/$1}")
+    delete_ary_elmt $1 PHP_IMAGES
+    printf "%s\n" "${PHP_IMAGES[@]}" > $MAIN_PATH/etc/repositories
+    echo "$1 deleted successfully"
+  else
+    echo -e "$1 not found\n"
+    list_repos
+  fi
+}
+
+while true ; do
+  case "$1" in
+    --local)
+        if [ "$2" ]
+        then
+          change_file ".envrc" $2
+          direnv allow
+          #echo "Local php version setted to $2 in file .envrc"
+        elif [ -f ".envrc" ]
+        then
+          cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
+        else
+          echo "$PROG: no local version configured for this directory"
+        fi
+        shift 2;;
+    --global)
+        if [ "$2" ]
+        then
+          change_file "$HOME/.php_global" $2
+          echo "Global php version setted to $2 in file $HOME/.php_global"
+        elif [ -f "$HOME/.php_global" ]
+        then
+          cat ~/.php_global | cut -d= -f2
+        else
+          echo "$PROG: no global version configured"
+        fi
+        shift 2 ;;
+    --list)
+        for IMAGE in ${PHP_IMAGES[@]}
+        do
+          echo "In $IMAGE"
+          docker_tags $IMAGE cli
+        done
+        shift;;
+    --install)
+        install_php_version $2
+        shift 2;;
+    --repositories)
+        list_repos
+        shift;;
+    --add)
+        add_repo $2
+        shift 2;;
+    --delete)
+        delete_repo $2
+        shift 2;;
+    --versions)
+        show_versions
+        shift ;;
+    -h|--help)
+        show_help
+        shift ;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
