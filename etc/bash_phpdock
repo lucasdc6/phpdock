@@ -1,3 +1,0 @@
-export PATH="$PHPDOCKPATH/bin:$PATH"
-
-[ -f "$PHPDOCKPATH/etc/php_global" ] && (source $PHPDOCKPATH/etc/php_global)
