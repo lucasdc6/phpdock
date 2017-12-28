@@ -10,30 +10,16 @@ $ git clone git@github.com:lucasdc6/phpdock.git
 $ echo 'export PATH="$HOME/.phpdock/bin:$PATH"' >> ~/.bash_profile
 ```
 
-3. Agregar el archivo php_global al bashrc
+3. Agregar el archivo php_global y la variable PHPDOCKPATH al bashrc
 ```bash
 $ echo 'source ~/.phpdock/etc/php_global' >> ~/.bash_profile
+$ echo 'export PHPDOCKPATH="$HOME/.phpdock"' >> ~/.bash_profile
 ```
 En ubuntu Ubuntu modificar ~/.bashrc
 
 En Zsh modificar ~/.zshrc
 
 4. Reiniciar la terminar para que los cambios surgan efecto.
-
-_Opcional:_
-
-Si se desea, se pueden acortar los pasos 2 y 3, agregando solo las siguientes
-líneas a su bashrc
-```bash
-$ echo 'export PHPDOCKPATH="$HOME/.phpdock"' >> ~/.bash_profile
-$ echo 'source ~/.phpdock/etc/bash_phpdock' >> ~/.bash_profile
-```
-En ubuntu Ubuntu modificar ~/.bashrc
-
-En Zsh modificar ~/.zshrc
-
-Lo único diferente con esto, es que ademas agrega la variable de ambiente
-PHPDOCKPATH, para que sea más fácil el manejo de rutas.
 
 
 ## Uso
@@ -51,7 +37,7 @@ Además se cuenta con 3 opciones para el manejo de los repositorios docker:
   * Eliminar repositorio
 
 Para el manejo de los repositorios, se cuenta con un archivo de configuración
-disponible en la el directorio etc, llamado _repositories._
+disponible en el directorio etc, llamado _repositories._
 
 En este archivo se cuenta con una lista de repositorios separados por saltos
 de líneas.
