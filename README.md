@@ -19,7 +19,7 @@ En ubuntu Ubuntu modificar ~/.bashrc
 
 En Zsh modificar ~/.zshrc
 
-4. Reiniciar la terminar para que los cambios surgan efecto.
+4. Reiniciar la terminar para efectuar los cambios.
 
 
 ## Uso
