@@ -2,7 +2,7 @@
 
 1. Clonar el repositorio en ~/.phpdock
 ```bash
-$ git clone git@github.com:lucasdc6/phpdock.git
+$ git clone git@github.com:lucasdc6/phpdock.git ~/.phpdock
 ```
 
 2. Agregar el directorio ~/.phpdock/bin para contar con todos los ejecutables
