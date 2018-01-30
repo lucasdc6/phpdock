@@ -1,0 +1,130 @@
+#!/bin/bash
+
+set -e
+
+# Set config variables
+PROG=`basename $0 | cut -d_ -f1`
+COMMAND=`basename $0 | cut -d_ -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  install       Install a php docker image from repositories
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND <version>
+       $PROG $COMMAND -l/--list
+
+  -l/--list   List all available versions
+              By default show php-cli versions
+              Optionallity you can specify a php-apache version
+
+<version> should be a string matching a php version known to php
+repositories
+see 'phpdock repositories --list'
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+# Show help if non arguments passed to script
+[ "$#" -eq 0 ] && ( show_help; exit 1)
+
+# Config getopt
+TEMP=`getopt -o l,h --long list,apache,desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
+
+# Function to install a php version
+# Arguments
+#   1: full name with tag
+function install_php_version
+{
+  if [ "$1" ]
+  then
+    docker pull $1
+  elif [ -f ".envrc" ]
+  then
+    echo -e "php version taken from file .envrc\n"
+    cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2 | xargs docker pull
+  elif [ -f "$MAIN_PATH/etc/php_global" ]
+  then
+    echo -e "php version taken from file $MAIN_PATH/etc/php_global\n"
+    cat $MAIN_PATH/etc/php_global | cut -d= -f2 | xargs docker pull
+  else
+    echo "Please specify a php version"
+  fi
+}
+
+# Function to get avaiables images from the repositories
+# Arguments
+#   1: image name
+#   2: type (cli|apache)
+function docker_tags {
+  image="$1"
+  tags=`wget -q https://registry.hub.docker.com/v1/repositories/${image}/tags -O -  | sed -e 's/[][]//g' -e 's/"//g' -e 's/ //g' | tr '}' '\n'  | awk -F: '{print $3}'`
+
+  if [ -n "$2" ]
+  then
+    tags=` echo "${tags}" | grep "$2" `
+  fi
+  echo -e "${tags}\n"
+}
+
+# Function to list php versions from repositories
+# Arguments
+#   1: type (cli|apache)
+function list_php_versions {
+  echo $PHP_IMAGES
+  for IMAGE in ${PHP_IMAGES[@]}
+  do
+    echo "In $IMAGE"
+    docker_tags $IMAGE $1
+  done
+}
+
+# default value of apache
+OPT="install"
+APACHE=false
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    -l|--list)
+      OPT="list"
+      shift;;
+    --apache)
+      APACHE=true
+      shift;;
+    --desc)
+      show_desc
+      shift
+      exit 0;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
+
+case "$OPT" in
+  install)
+    install_php_version $1
+    ;;
+  list)
+    if [ $APACHE = true ]
+    then
+      list_php_versions "apache"
+    else
+      list_php_versions "cli"
+    fi
+  ;;
+esac

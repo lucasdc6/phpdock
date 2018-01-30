@@ -1,0 +1,129 @@
+#!/bin/bash
+
+set -e
+
+# Set config variables
+PROG=`basename $0 | cut -d_ -f1`
+COMMAND=`basename $0 | cut -d_ -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Avaiables repositories
+if [ ! -f "$MAIN_PATH/etc/repositories" ]
+then
+  echo -e "$MAIN_PATH/etc/repositories missing, default value setted\nDefault value: php"
+  echo "php" > "$MAIN_PATH/etc/repositories"
+fi
+PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  repositories  Manage repositories
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND -l/--list
+       $PROG $COMMAND -a/--add <repository>
+       $PROG $COMMAND -d/--delete <repository>
+
+  -l/--list    List all repositories
+  -a/--add     Add a repository
+  -d/--delete  Delete a repository
+
+<repository> should be a string matching a docker registry
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+# Function to delete an elements from array
+# Arguments
+#   1: element
+#   2: array
+function delete_ary_elmt {
+  local word=$1      # the element to search for & delete
+  local aryref="$2[@]" # a necessary step since '${!$2[@]}' is a syntax error
+  local arycopy=("${!aryref}") # create a copy of the input array
+  local status=1
+  for (( i = ${#arycopy[@]} - 1; i >= 0; i-- )); do # iterate over indices backwards
+    elmt=${arycopy[$i]}
+    [[ $elmt == $word ]] && unset "$2[$i]" && status=0 # unset matching elmts in orig. ary
+  done
+  return $status # return 0 if something was deleted; 1 if not
+}
+
+# Function to list all repos in file etc/repositories
+function list_repos
+{
+  [ ${#PHP_IMAGES[@]} -eq 0 ] && (echo -e "Not repositories found.\nPlease add a repository with the option $PROG --add REPOSITORY"; exit 1)
+  printf "Avaiables repositories:\n"
+  printf "\t* %s\n" "${PHP_IMAGES[@]}"
+}
+
+# Function to add a repo to array PHP_IMAGES and file etc/repositories
+# Arguments
+#   1: repository name
+function add_repo
+{
+  if [[ "${PHP_IMAGES[@]}" =~ "${1}" ]]
+  then
+    echo "$1 already in use"
+  else
+    PHP_IMAGES+=("$1")
+    printf "%s\n" "${PHP_IMAGES[@]}" > $MAIN_PATH/etc/repositories
+    echo "$1 added successfully"
+  fi
+}
+
+# Function to delete a repo from array PHP_IMAGES and file etc/repositories
+# Arguments
+#   1: repository name
+function delete_repo
+{
+  if [[ "${PHP_IMAGES[@]}" =~ "${1}" ]]
+  then
+    delete_ary_elmt $1 PHP_IMAGES
+    printf "%s\n" "${PHP_IMAGES[@]}" > $MAIN_PATH/etc/repositories
+    echo "$1 deleted successfully"
+  else
+    echo -e "$1 not found\n"
+    list_repos
+  fi
+}
+
+# Show help if non arguments passed to script
+[ "$#" -eq 0 ] && ( show_help; exit 1)
+
+# Config getopt
+TEMP=`getopt -o l,a:,d:,h --long list,add:,delete:,desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    -l|--list)
+      list_repos
+      shift;;
+    -a|--add)
+      add_repo $2
+      shift 2
+      exit 0;;
+    -d|--delete)
+      delete_repo $2
+      shift 2
+      exit 0;;
+    --desc)
+      show_desc
+      shift
+      exit 0;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done

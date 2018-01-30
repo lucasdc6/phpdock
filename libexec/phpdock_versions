@@ -1,0 +1,72 @@
+#!/bin/bash
+
+set -e
+
+# Set config variables
+PROG=`basename $0 | cut -d_ -f1`
+COMMAND=`basename $0 | cut -d_ -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  versions      List all php versions available to $PROG
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND [--apache]
+
+List all php versions available to $PROG
+By default, show cli versions
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+# Function to get installed versions
+# Arguments
+#   1: type (cli|apache)
+function show_versions {
+  for IMAGE in "${PHP_IMAGES[@]}"
+  do
+    docker images | awk -v image=$IMAGE -v tag=$1 '($1 == image) && ($2 ~ tag) {print $1":"$2;}'
+  done
+}
+
+# Config getopt
+TEMP=`getopt -o h --long apache,desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+# default value of apache
+APACHE=false
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    --apache)
+      APACHE=true
+      shift;;
+    --desc)
+      show_desc
+      shift
+      exit 0;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
+
+if [ $APACHE = true ]
+then
+  show_versions "apache"
+else
+  show_versions "cli"
+fi

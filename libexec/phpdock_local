@@ -1,0 +1,129 @@
+#!/bin/bash
+
+set -e
+
+# Set config variables
+PROG=`basename $0 | cut -d_ -f1`
+COMMAND=`basename $0 | cut -d_ -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  local         Set or show the local application-specific php version
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND [--apache]
+
+Set or show php local version setted in .envrc files
+By default, show php cli version
+
+When you run a php command, $PROG will look for a '.envrc'
+file in the current directory and each parent directory with a
+environment variable called 'PHP_CLI_DOCKER_IMAGE' for cli and
+'PHP_SERVER_DOCKER_IMAGE' for apache server. If no such
+file is found in the tree, rbenv will use the global php version
+specified with '$PROG global'. A version specified with the
+environment variables takes precedence over local
+and global versions.
+
+<version> should be a string matching a php version known to phpdock
+see 'phpdock versions'
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+# Function to update configuration's files
+# Arguments
+#   1: file to change
+#   2: version to add in file
+#   3: type (php-cli|php-apache) in env var format
+#       PHP_CLI_DOCKER_IMAGE from php-cli
+#       PHP_SERVER_DOCKER_IMAGE from php-apache
+function change_file {
+  if [ ! -e "$1" ]
+  then
+    echo "export $3=$2" > $1
+  elif grep "^export $3=[[:print:]]*$" $1
+  then
+    sed -i -- "s~export $3=.*~export $3=$2~g" $1
+  else
+    echo "export $3=$2" >> $1
+  fi
+}
+
+# Function to change local version of php
+# Arguments
+#   1: version to set as local
+function change_php_local {
+  if [ "$1" ]
+  then
+    change_file ".envrc" $1 "PHP_CLI_DOCKER_IMAGE"
+    direnv allow
+    echo "Local php version setted to $1 in file .envrc"
+  elif [ -f ".envrc" ] && grep "PHP_CLI_DOCKER_IMAGE" ".envrc" > /dev/null
+  then
+    cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no local version configured for this directory"
+  fi
+}
+
+# Function to change local version of php-apache
+# Arguments
+#   1: version to set as local
+function change_apache_local {
+  if [ "$1" ]
+  then
+    change_file ".envrc" $1 "PHP_SERVER_DOCKER_IMAGE"
+    direnv allow
+    echo "Local apache version setted to $1 in file .envrc"
+  elif [ -f ".envrc" ] && grep "PHP_SERVER_DOCKER_IMAGE" ".envrc" > /dev/null
+  then
+    cat .envrc | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no local apache version configured for this directory"
+  fi
+}
+
+# Config getopt
+TEMP=`getopt -o h --long apache,unset,desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+# default value of apache
+APACHE=false
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    --apache)
+      APACHE=true
+      shift;;
+    --unset)
+      echo "Comming soon"
+      shift
+      exit 0;;
+    --desc)
+      show_desc
+      shift
+      exit 0;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
+
+if [ $APACHE = true ]
+then
+  change_apache_local $1
+else
+  change_php_local $1
+fi
