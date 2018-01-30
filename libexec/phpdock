@@ -1,0 +1,35 @@
+#!/bin/bash
+
+set -e
+
+# Get the basename and main path of script
+PROG=`basename $0`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+COMMANDS=(`find $MAIN_PATH/libexec/phpdock_* -maxdepth 1 -type f -executable`)
+
+# Help message
+function show_help {
+  cat <<HELP
+Usage: $PROG <command> [<args>]
+
+Aviables commands:
+HELP
+for COMMAND in ${COMMANDS[@]}
+do
+  $COMMAND --desc
+done
+}
+
+# Show help if non arguments passed to script
+[ "$#" -eq 0 ] && ( show_help; exit 1)
+
+COMMAND="$MAIN_PATH/libexec/phpdock_$1"
+shift
+
+if [ -x $COMMAND ]
+then
+  $COMMAND $@
+else
+  echo "$COMMAND nap"
+fi
