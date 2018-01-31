@@ -38,9 +38,10 @@ Con el fin de facilitar el uso de los script php y php-server, se provee este
 script con 5 opciones relacionadas al manejo de versiones:
   * Setear versión global (requiere reinicio de terminal)
   * Setear versión local (no requiere reinicio de terminal)
-  * Instalar una version (docker pull de los repositorios dados)
+  * Instalar una versión (docker pull de los repositorios dados)
   * Listar versiones instaladas
   * Listar opciones disponibles para bajar de los repositorios
+
 Además se cuenta con 3 opciones para el manejo de los repositorios docker:
   * Listar repositorios
   * Agregar repositorio
@@ -64,21 +65,21 @@ para que el script pueda reconocer las imágenes.
 La regla a seguir, es taguear las imágenes con un nombre que contenga "cli" o
 "apache", dependiendo del tipo de imagen que sea.
 
-Las imágenes tagueadas con un "cli" en su nombre serén utilizadas por el script
+Las imágenes tagueadas con un "cli" en su nombre serán utilizadas por el script
 php, mientras que las "apache", serán utilizadas por el script php-server
 
 De seguir esta regla, solo hace falta agregar el repositorio de la siguiente
 manera:
 
 ```bash
-  $ phpdock --add <NOMBRE DEL REPOSITORIO>
+  $ phpdock repositories --add <NOMBRE DEL REPOSITORIO>
 ```
 
 Por ejemplo, para agregar el repositorio oficial de php, solo hace falta
 ejecutar:
 
 ```bash
-  $ phpdock --add php
+  $ phpdock repositories --add php
 ```
 
 Como se puede notar, las imágenes en este repositorio son tagueadas siguiendo la
@@ -90,3 +91,52 @@ Para el correcto uso de este script, se debe entender que funciona seteando
 variables de ambiente que usará el script php y php-server.
 Este script **NO** instala ninguna versión de php provistas por el sistema, sino
 que simplemente baja la imagen docker del repositorio especificado.
+
+## Instalar una versión de php
+
+Si bien phpdock no instala versiones de php, sino que clona imágenes docker y
+las acondiciona de manera que sea transparente su uso para el programador, vamos
+a referirnos a la acción de clonar dichas imágenes como instalación.
+
+Existen 2 maneras de instalar una nueva versión de php:
+
+### Manual
+
+La manera manual de instalar una nueva versión es la siguiente:
+
+1. Primero se debe conocer el repositorio y la versión (tag de docker) de la
+   imagen a instalar.
+
+   Para esto se puede consultar el comando "install" con la opción "--list":
+
+   ```bash
+    phpdock install --list
+    # lista de versiones
+    ```
+2. Una vez reconocido el nombre y versión de la imagen, se debe simplemente
+   especificarlo de la siguiente manera:
+   Por ejemplo, vamos a instalar la versión 7.1.9 del repositorio docker oficial
+   de php.
+
+   ```bash
+    phpdock install php:7.1.9
+   ```
+
+### Usando archivo .php-version
+
+Si se conoce la versión de php se se va a utilizar en el proyecto de antemano,
+se puede crear un archivo llamado ".php-version", en el cual se especifique
+dicha versión, para facilitar la búsqueda de la imagen docker ideal para su
+proyecto.
+
+Una vez creado el archivo, simplemente hace falta ejecutar el comando "install"
+de phpdock sin ningún argumento, de la siguiente manera:
+
+   ```bash
+    phpdock install
+   ```
+
+Con esto, se desplazará un menú con todas las imágenes docker de los
+repositorios que cumplan con dicha versión.
+Una vez escrito el número y presionado enter, comenzara el proceso de pull de la
+imagen docker.
