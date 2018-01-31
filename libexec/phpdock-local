@@ -38,6 +38,16 @@ More information at https://github.com/lucasdc6/phpdock/README.md
 HELP
 }
 
+function upsearch {
+  slashes=${PWD//[^\/]/}
+  directory="$PWD"
+  for (( n=${#slashes}; n>0; --n ))
+  do
+    test -e "$directory/$1" && echo "$directory/$1" && return
+    directory="$directory/.."
+  done
+}
+
 # Function to update configuration's files
 # Arguments
 #   1: file to change
@@ -45,10 +55,14 @@ HELP
 #   3: type (php-cli|php-apache) in env var format
 #       PHP_CLI_DOCKER_IMAGE from php-cli
 #       PHP_SERVER_DOCKER_IMAGE from php-apache
+#   4: unset mode true
 function change_file {
   if [ ! -e "$1" ]
   then
     echo "export $3=$2" > $1
+  elif [ "$#" -eq 4 ]
+  then
+    sed -i "/export $3=.*/d" $1
   elif grep "^export $3=[[:print:]]*$" $1
   then
     sed -i -- "s~export $3=.*~export $3=$2~g" $1
@@ -61,16 +75,19 @@ function change_file {
 # Arguments
 #   1: version to set as local
 function change_php_local {
+  ENVRC=`upsearch ".envrc"`
   if [ "$1" ]
   then
-    change_file ".envrc" $1 "PHP_CLI_DOCKER_IMAGE"
+    change_file $ENVRC $1 "PHP_CLI_DOCKER_IMAGE" $2
     direnv allow
     echo "Local php version setted to $1 in file .envrc"
-  elif [ -f ".envrc" ] && grep "PHP_CLI_DOCKER_IMAGE" ".envrc" > /dev/null
+  elif [ -n "$ENVRC" ] && grep "PHP_CLI_DOCKER_IMAGE" $ENVRC > /dev/null
   then
-    cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
+    cat $ENVRC | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
+    exit
   else
     echo "$PROG: no local version configured for this directory"
+    exit 1
   fi
 }
 
@@ -78,14 +95,15 @@ function change_php_local {
 # Arguments
 #   1: version to set as local
 function change_apache_local {
+  ENVRC=`upsearch ".envrc"`
   if [ "$1" ]
   then
-    change_file ".envrc" $1 "PHP_SERVER_DOCKER_IMAGE"
+    change_file $ENVRC $1 "PHP_SERVER_DOCKER_IMAGE"
     direnv allow
     echo "Local apache version setted to $1 in file .envrc"
-  elif [ -f ".envrc" ] && grep "PHP_SERVER_DOCKER_IMAGE" ".envrc" > /dev/null
+  elif [ -n "$ENVRC" ] && grep "PHP_SERVER_DOCKER_IMAGE" "$ENVRC" > /dev/null
   then
-    cat .envrc | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
+    cat $ENVRC | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
   else
     echo "$PROG: no local apache version configured for this directory"
   fi
@@ -97,6 +115,7 @@ eval set -- "$TEMP"
 
 # default value of apache
 APACHE=false
+OPTION=set
 
 # Parse arguments
 while true ; do
@@ -105,9 +124,8 @@ while true ; do
       APACHE=true
       shift;;
     --unset)
-      echo "Comming soon"
-      shift
-      exit 0;;
+      OPTION=unset
+      shift;;
     --desc)
       show_desc
       shift
@@ -121,9 +139,22 @@ while true ; do
   esac
 done
 
-if [ $APACHE = true ]
-then
-  change_apache_local $1
-else
-  change_php_local $1
-fi
+case "$OPTION" in
+  set)
+    if [ $APACHE = true ]
+    then
+      change_apache_local $1
+    else
+      change_php_local $1
+    fi
+  ;;
+  unset)
+    ENVRC=`upsearch ".envrc"`
+    if [ $APACHE = true ]
+    then
+      change_file $ENVRC false "PHP_SERVER_DOCKER_IMAGE" true
+    else
+      change_file $ENVRC false "PHP_CLI_DOCKER_IMAGE" true
+    fi
+    direnv allow
+esac
