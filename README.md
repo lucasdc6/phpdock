@@ -1,11 +1,11 @@
 # phpdock
 
 phpdock es un manejador de versiones de php locales, que utiliza como principal
-tecnología [https://github.com/docker](Docker), haciendo uso del 
-[https://hub.docker.com/_/php/](repositorio oficial) de php en Docker Hub.
+tecnología [Docker](https://github.com/docker), haciendo uso del 
+[repositorio oficial](https://hub.docker.com/\_/php/) de php en Docker Hub.
 
-phpdock fue inspirado en programas como [https://github.com/rbenv/rbenv](rbenv),
-[https://github.com/syndbg/goenv](goenv) y [https://github.com/pyenv/pyenv](pyenv)
+phpdock fue inspirado y sigue el modelo de [rbenv](https://github.com/rbenv/rbenv),
+[goenv](https://github.com/syndbg/goenv) y [pyenv](https://github.com/pyenv/pyenv)
 
 
 ## Instalación
