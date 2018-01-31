@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# Usage: phpdock commands [--sh|--no-sh]
+
+set -e
+
+# Set config variables
+PROG=`basename $0 | cut -d- -f1`
+COMMAND=`basename $0 | cut -d- -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  commands      List all available phpdock commands
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND
+
+List all available phpdock commands
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+# Config getopt
+TEMP=`getopt -o h --long desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    --desc)
+      show_desc
+      shift
+      exit 0;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
+
+COMMANDS=(`find $MAIN_PATH/libexec/phpdock-* -maxdepth 1 -type f -executable | rev | cut -d/ -f 1 | rev | uniq | sort`)
+
+for COMMAND in ${COMMANDS[@]}; do
+  echo ${COMMAND:8}
+done
