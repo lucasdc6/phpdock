@@ -1,0 +1,122 @@
+#!/bin/bash
+
+set -e
+
+# Set config variables
+PROG=`basename $0 | cut -d- -f1`
+COMMAND=`basename $0 | cut -d- -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  global        Set or show the global php version
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND [--apache]
+       $PROG $COMMAND <version> [--apache]
+
+Set or show php global version setted in $MAIN_PATH/etc/php_global
+By default, show php cli version
+
+You can override the global version at any time by setting a
+directory-specific version with '$PROG local' or by setting
+the 'PHP_CLI_DOCKER_IMAGE' and 'PHP_SERVER_DOCKER_IMAGE'
+environments variables.
+
+<version> should be a string matching a php version known to $PROG
+see '$PROG versions'
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+# Function to update configuration's files
+# Arguments
+#   1: file to change
+#   2: version to add in file
+#   3: type (php-cli|php-apache) in env var format
+#       PHP_CLI_DOCKER_IMAGE from php-cli
+#       PHP_SERVER_DOCKER_IMAGE from php-apache
+function change_file {
+  if [ ! -e "$1" ]
+  then
+    echo "export $3=$2" > $1
+  elif grep "^export $3=[[:print:]]*$" $1
+  then
+    sed -i -- "s~export $3=.*~export $3=$2~g" $1
+  else
+    echo "export $3=$2" >> $1
+  fi
+}
+
+# Function to change global version of php
+# Arguments
+#   1: version to set as global
+function change_php_global {
+  if [ "$1" ]
+  then
+    change_file "$MAIN_PATH/etc/php_global" $1 "PHP_CLI_DOCKER_IMAGE"
+    echo "Global php version setted to $1 in file $MAIN_PATH/etc/php_global"
+    echo -e "\nRemember restart your terminal"
+  elif [ -f "$MAIN_PATH/etc/php_global" ] && grep "PHP_CLI_DOCKER_IMAGE" $MAIN_PATH/etc/php_global > /dev/null
+  then
+    cat $MAIN_PATH/etc/php_global | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no php global version configured"
+  fi
+}
+
+# Function to change global version of php
+# Arguments
+#   1. version to set as global
+function change_apache_global {
+  if [ "$1" ]
+  then
+    change_file "$MAIN_PATH/etc/php_global" $1 "PHP_SERVER_DOCKER_IMAGE"
+    echo "Global php version setted to $1 in file $MAIN_PATH/etc/php_global"
+    echo -e "\nRemember restart your terminal"
+  elif [ -f "$MAIN_PATH/etc/php_global" ] && grep "PHP_SERVER_DOCKER_IMAGE" $MAIN_PATH/etc/php_global > /dev/null
+  then
+    cat $MAIN_PATH/etc/php_global | grep "PHP_SERVER_DOCKER_IMAGE" | cut -d= -f2
+  else
+    echo "$PROG: no apache global version configured"
+  fi
+}
+
+# Config getopt
+TEMP=`getopt -o h --long apache,desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+# default value of apache
+APACHE=false
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    --apache)
+      APACHE=true
+      shift;;
+    --desc)
+      show_desc
+      shift
+      exit 0;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
+
+if [ $APACHE = true ]
+then
+  change_apache_global $1
+else
+  change_php_global $1
+fi
