@@ -1,0 +1,84 @@
+#!/bin/bash
+
+set -e
+
+# Set config variables
+PROG=`basename $0 | cut -d- -f1`
+COMMAND=`basename $0 | cut -d- -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  version         Show the current php version and its origin
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND
+
+Shows the currently selected php version and how it was
+selected. To obtain only the version string, use \`rbenv
+version --name'.
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+function upsearch {
+  slashes=${PWD//[^\/]/}
+  directory="$PWD"
+  for (( n=${#slashes}; n>0; --n ))
+  do
+    test -e "$directory/$1" && echo "$directory/$1" && return
+    directory="$directory/.."
+  done
+}
+
+# Config getopt
+TEMP=`getopt -o h --long apache,name,desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+# default apache value
+ONLY_NAME=false
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    --apache)
+      APACHE="--apache"
+      shift;;
+    --name)
+      ONLY_NAME=true
+      shift;;
+    --desc)
+      show_desc
+      shift
+      exit 0;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
+
+if phpdock local > /dev/null; then
+  ENVRC=`upsearch ".envrc"`
+  printf `phpdock local $APACHE`
+  if $ONLY_NAME = true ; then
+    echo
+  else
+    echo " (set by `realpath $ENVRC`)"
+  fi
+else
+  printf `phpdock global $APACHE`
+  if $ONLY_NAME = true ; then
+    echo
+  else
+    echo " (set by $MAIN_PATH/etc/php_global)"
+  fi
+fi
