@@ -32,8 +32,20 @@ More information at https://github.com/lucasdc6/phpdock/README.md
 HELP
 }
 
+function upsearch {
+  slashes=${PWD//[^\/]/}
+  directory="$PWD"
+  for (( n=${#slashes}; n>0; --n ))
+  do
+    test -e "$directory/$1" && echo "$directory/$1" && return
+    directory="$directory/.."
+  done
+}
+
+PHP_VERSION_FILE=`upsearch ".php-version"`
+
 # Show help if non arguments passed to script
-[ "$#" -eq 0 ] && ( show_help; exit 1)
+[ "$#" -eq 0 -a -z "$PHP_VERSION_FILE" ] && ( show_help; exit 1)
 
 # Config getopt
 TEMP=`getopt -o l,h --long list,apache,desc,help -n $PROG -- "$@"`
@@ -80,18 +92,44 @@ function docker_tags {
 # Function to list php versions from repositories
 # Arguments
 #   1: type (cli|apache)
+#   2: silent mode
 function list_php_versions {
-  echo $PHP_IMAGES
+  [ -z $2 ] && ( echo "List of availables versions" )
   for IMAGE in ${PHP_IMAGES[@]}
   do
-    echo "In $IMAGE"
-    docker_tags $IMAGE $1
+    [ -z $2 ] && ( echo -e "\nIn $IMAGE repository" )
+    array=(`docker_tags $IMAGE $1`)
+    if [ -n "$2" ]; then
+      array=( "${array[@]/#/$IMAGE:}" )
+    fi
+    printf '%s\n' "${array[@]}"
+  done
+}
+# Function to generate versions list from repositories
+# Arguments
+#   1: array of elements
+function createmenu {
+  echo "Select a version to install"
+  select option; do # in "$@" is the default
+    if [ "$REPLY" -eq $# ];
+    then
+      echo "Exiting..."
+      break;
+    elif [ 1 -le "$REPLY" ] && [ "$REPLY" -le $(($#-1)) ];
+    then
+      echo "You selected $option which is option $REPLY"
+      echo "Installing.."
+      install_php_version $option
+      break;
+    else
+      echo "Incorrect Input: Select a number 1-$#"
+    fi
   done
 }
 
 # default value of apache
 OPT="install"
-APACHE=false
+TYPE="cli"
 
 # Parse arguments
 while true ; do
@@ -100,7 +138,7 @@ while true ; do
       OPT="list"
       shift;;
     --apache)
-      APACHE=true
+      TYPE="apache"
       shift;;
     --desc)
       show_desc
@@ -115,16 +153,21 @@ while true ; do
   esac
 done
 
+PHP_VERSION=$1
+
 case "$OPT" in
   install)
-    install_php_version $1
+    if [ -z $1 ]; then
+      PHP_VERSION=`cat $PHP_VERSION_FILE`
+      VERSIONS=(`list_php_versions $TYPE true | grep $PHP_VERSION`)
+      VERSIONS=(${VERSIONS[@]} "exit")
+      createmenu "${VERSIONS[@]}"
+    else
+      echo "Installing $PHP_VERSION"
+      install_php_version $PHP_VERSION
+    fi
     ;;
   list)
-    if [ $APACHE = true ]
-    then
-      list_php_versions "apache"
-    else
-      list_php_versions "cli"
-    fi
+    list_php_versions $TYPE
   ;;
 esac
