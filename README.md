@@ -106,7 +106,7 @@ Este script **NO** instala ninguna versión de php provistas por el sistema, sin
 que simplemente baja la imagen docker del repositorio especificado.
 
 Variable | Descripción
---------------------------------
+---------|------------
 `PHP_CLI_DOCKER_IMAGE` | Variable para especificar versión de imagen php cli
 `PHP_SERVER_DOCKER_IMAGE` | Variable para especificar versión de imagen php con apache
 `PHPDOCK_DEBUG` | Muestra información de debug
