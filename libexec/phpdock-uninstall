@@ -1,4 +1,14 @@
 #!/bin/bash
+# Summary: Uninstall a specific php version
+# Usage: $PROG $COMMAND
+#
+#  -f  Attempt to remove the specified version without prompting
+#      for confirmation. If the version does not exist, do not
+#      display an error message.
+#
+# See \`phpdock versions\` for a complete list of installed versions.
+#
+# More information at https://github.com/lucasdc6/phpdock/README.md
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
@@ -8,29 +18,7 @@ PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
-# Function to show a descriptions in phpdock script help
-function show_desc {
-  cat <<HELP
-  uninstall     Uninstall a specific php version
-HELP
-}
-
-# Function to show a help message
-function show_help {
-  cat <<HELP
-Usage: $PROG $COMMAND
-
-  -f  Attempt to remove the specified version without prompting
-      for confirmation. If the version does not exist, do not
-      display an error message.
-
-See \`phpdock versions\` for a complete list of installed versions.
-
-More information at https://github.com/lucasdc6/phpdock/README.md
-HELP
-}
-
-[ "$#" -eq 0 ] && ( show_help; exit 0 )
+[ "$#" -eq 0 ] && ( phpdock-help $COMMAND; exit 0 )
 
 # Function to uninstall a php version
 # Arguments
@@ -72,20 +60,17 @@ function createmenu {
 }
 
 # Config getopt
-TEMP=`getopt -o f,h --long force,desc,help -n $PROG -- "$@"`
+TEMP=`getopt -o f,h --long force,help -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # Parse arguments
 while true ; do
   case "$1" in
-    --desc)
-      show_desc
-      exit ;;
     -f|--force)
       OPTIONS="-f"
       shift;;
     -h|--help)
-      show_help
+      phpdock-help $COMMAND
       shift
       exit 0;;
     --) shift ; break ;;

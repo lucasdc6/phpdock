@@ -1,4 +1,20 @@
 #!/bin/bash
+# Summary: Set or show the global php version
+# Usage: $PROG $COMMAND [--apache]
+#        $PROG $COMMAND <version> [--apache]
+#
+# Set or show php global version setted in $MAIN_PATH/etc/php_global
+# By default, show php cli version
+#
+# You can override the global version at any time by setting a
+# directory-specific version with '$PROG local' or by setting
+# the 'PHP_CLI_DOCKER_IMAGE' and 'PHP_SERVER_DOCKER_IMAGE'
+# environments variables.
+#
+# <version> should be a string matching a php version known to $PROG
+# see '$PROG versions'
+#
+# More information at https://github.com/lucasdc6/phpdock/README.md
 
 set -e
 
@@ -8,34 +24,6 @@ set -e
 PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
-
-# Function to show a descriptions in phpdock script help
-function show_desc {
-  cat <<HELP
-  global        Set or show the global php version
-HELP
-}
-
-# Function to show a help message
-function show_help {
-  cat <<HELP
-Usage: $PROG $COMMAND [--apache]
-       $PROG $COMMAND <version> [--apache]
-
-Set or show php global version setted in $MAIN_PATH/etc/php_global
-By default, show php cli version
-
-You can override the global version at any time by setting a
-directory-specific version with '$PROG local' or by setting
-the 'PHP_CLI_DOCKER_IMAGE' and 'PHP_SERVER_DOCKER_IMAGE'
-environments variables.
-
-<version> should be a string matching a php version known to $PROG
-see '$PROG versions'
-
-More information at https://github.com/lucasdc6/phpdock/README.md
-HELP
-}
 
 # Function to update configuration's files
 # Arguments
@@ -91,7 +79,7 @@ function change_apache_global {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,desc,help -n $PROG -- "$@"`
+TEMP=`getopt -o h --long apache,help -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default value of apache
@@ -103,14 +91,9 @@ while true ; do
     --apache)
       APACHE=true
       shift;;
-    --desc)
-      show_desc
-      shift
-      exit 0;;
     -h|--help)
-      show_help
-      shift
-      exit 0;;
+      phpdock-help $COMMAND
+      exit;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac

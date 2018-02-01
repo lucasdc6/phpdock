@@ -1,4 +1,14 @@
 #!/bin/bash
+# Summary: Show the current php version and its origin
+# Usage: $PROG $COMMAND
+#
+# Shows the currently selected php version and how it was
+# selected. 
+# To obtain only the version string, use \`phpdock version-name'.
+# To obtaing only the path to origin file who set the version, use
+# \`phpdock version-origin'.
+#
+# More information at https://github.com/lucasdc6/phpdock/README.md
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
@@ -7,28 +17,6 @@ set -e
 PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
-
-# Function to show a descriptions in phpdock script help
-function show_desc {
-  cat <<HELP
-  version       Show the current php version and its origin
-HELP
-}
-
-# Function to show a help message
-function show_help {
-  cat <<HELP
-Usage: $PROG $COMMAND
-
-Shows the currently selected php version and how it was
-selected. 
-To obtain only the version string, use \`phpdock version-name'.
-To obtaing only the path to origin file who set the version, use
-\`phpdock version-origin'.
-
-More information at https://github.com/lucasdc6/phpdock/README.md
-HELP
-}
 
 function upsearch {
   slashes=${PWD//[^\/]/}
@@ -41,7 +29,7 @@ function upsearch {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,name,desc,help -n $PROG -- "$@"`
+TEMP=`getopt -o h --long apache,name,help -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default apache value
@@ -53,12 +41,8 @@ while true ; do
     --apache)
       APACHE="--apache"
       shift;;
-    --desc)
-      show_desc
-      shift
-      exit 0;;
     -h|--help)
-      show_help
+      phpdock-help $COMMAND
       shift
       exit 0;;
     --) shift ; break ;;

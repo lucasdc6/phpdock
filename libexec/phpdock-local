@@ -1,4 +1,23 @@
 #!/bin/bash
+# Summary: Set or show the local application-specific php version
+# Usage: $PROG $COMMAND [--apache]
+#
+# Set or show php local version setted in .envrc files
+# By default, show php cli version
+#
+# When you run a php command, $PROG will look for a '.envrc'
+# file in the current directory and each parent directory with a
+# environment variable called 'PHP_CLI_DOCKER_IMAGE' for cli and
+# 'PHP_SERVER_DOCKER_IMAGE' for apache server. If no such
+# file is found in the tree, rbenv will use the global php version
+# specified with '$PROG global'. A version specified with the
+# environment variables takes precedence over local
+# and global versions.
+#
+# <version> should be a string matching a php version known to phpdock
+# see '$PROG versions'
+#
+# More information at https://github.com/lucasdc6/phpdock/README.md
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
@@ -7,37 +26,6 @@ set -e
 PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
-
-# Function to show a descriptions in phpdock script help
-function show_desc {
-  cat <<HELP
-  $COMMAND         Set or show the local application-specific php version
-HELP
-}
-
-# Function to show a help message
-function show_help {
-  cat <<HELP
-Usage: $PROG $COMMAND [--apache]
-
-Set or show php local version setted in .envrc files
-By default, show php cli version
-
-When you run a php command, $PROG will look for a '.envrc'
-file in the current directory and each parent directory with a
-environment variable called 'PHP_CLI_DOCKER_IMAGE' for cli and
-'PHP_SERVER_DOCKER_IMAGE' for apache server. If no such
-file is found in the tree, rbenv will use the global php version
-specified with '$PROG global'. A version specified with the
-environment variables takes precedence over local
-and global versions.
-
-<version> should be a string matching a php version known to phpdock
-see '$PROG versions'
-
-More information at https://github.com/lucasdc6/phpdock/README.md
-HELP
-}
 
 function upsearch {
   slashes=${PWD//[^\/]/}
@@ -111,7 +99,7 @@ function change_apache_local {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,unset,desc,help -n $PROG -- "$@"`
+TEMP=`getopt -o h --long apache,unset,help -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default value of apache
@@ -127,12 +115,8 @@ while true ; do
     --unset)
       OPTION=unset
       shift;;
-    --desc)
-      show_desc
-      shift
-      exit 0;;
     -h|--help)
-      show_help
+      phpdock-help $COMMAND
       shift
       exit 0;;
     --) shift ; break ;;

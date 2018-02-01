@@ -1,4 +1,5 @@
 #!/bin/bash
+# Summary: Shows the currently selected php version
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
@@ -7,17 +8,6 @@ set -e
 PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
-
-# Function to show a help message
-function show_help {
-  cat <<HELP
-Usage: $PROG $COMMAND
-
-Shows the currently selected php version
-
-More information at https://github.com/lucasdc6/phpdock/README.md
-HELP
-}
 
 function upsearch {
   slashes=${PWD//[^\/]/}
@@ -40,7 +30,7 @@ while true ; do
       APACHE="--apache"
       shift;;
     -h|--help)
-      show_help
+      phpdock-help $COMMAND
       shift
       exit 0;;
     --) shift ; break ;;

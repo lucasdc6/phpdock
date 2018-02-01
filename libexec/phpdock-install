@@ -1,4 +1,18 @@
 #!/bin/bash
+# Summary: Install a php docker image from repositories
+#
+# Usage: $PROG $COMMAND <version>
+#        $PROG $COMMAND -l/--list
+#
+#  -l/--list   List all available versions
+#              By default show php-cli versions
+#              Optionallity you can specify a php-apache version
+#
+# <version> should be a string matching a php version known to php
+# repositories
+# see 'phpdock repositories --list'
+#
+# More information at https://github.com/lucasdc6/phpdock/README.md
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
@@ -7,31 +21,6 @@ set -e
 PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
-
-# Function to show a descriptions in phpdock script help
-function show_desc {
-  cat <<HELP
-  install       Install a php docker image from repositories
-HELP
-}
-
-# Function to show a help message
-function show_help {
-  cat <<HELP
-Usage: $PROG $COMMAND <version>
-       $PROG $COMMAND -l/--list
-
-  -l/--list   List all available versions
-              By default show php-cli versions
-              Optionallity you can specify a php-apache version
-
-<version> should be a string matching a php version known to php
-repositories
-see 'phpdock repositories --list'
-
-More information at https://github.com/lucasdc6/phpdock/README.md
-HELP
-}
 
 function upsearch {
   slashes=${PWD//[^\/]/}
@@ -46,10 +35,10 @@ function upsearch {
 PHP_VERSION_FILE=`upsearch ".php-version"`
 
 # Show help if non arguments passed to script
-[ "$#" -eq 0 -a -z "$PHP_VERSION_FILE" ] && ( show_help; exit 1)
+[ "$#" -eq 0 -a -z "$PHP_VERSION_FILE" ] && ( phpdock-help $COMMAND; exit 1)
 
 # Config getopt
-TEMP=`getopt -o l,h --long list,apache,desc,help -n $PROG -- "$@"`
+TEMP=`getopt -o l,h --long list,apache,help -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
@@ -141,12 +130,8 @@ while true ; do
     --apache)
       TYPE="apache"
       shift;;
-    --desc)
-      show_desc
-      shift
-      exit 0;;
     -h|--help)
-      show_help
+      phpdock-help $COMMAND
       shift
       exit 0;;
     --) shift ; break ;;
