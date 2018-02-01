@@ -2,6 +2,18 @@
 
 set -e
 
+[ -n "$PHPDOCK_DEBUG" ] && set -x
+
+if [ "$1" = "--debug" ]; then
+  export PHPDOCK_DEBUG=true
+  shift
+fi
+
+if [ -n "$PHPDOCK_DEBUG" ]; then
+  export PS4='+ [${BASH_SOURCE##*/}:${LINENO}] '
+  set -x
+fi
+
 # Get the basename and main path of script
 PROG=`basename $0`
 MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
@@ -23,7 +35,7 @@ phpdock versions --desc
 }
 
 # Show help if non arguments passed to script
-[ "$#" -eq 0 ] && ( show_help; exit 1)
+[ "$#" -eq 0 -o "$1" = "help" ] && ( show_help; exit 1)
 
 COMMAND="$MAIN_PATH/libexec/phpdock-$1"
 COMMAND_NAME=$1
