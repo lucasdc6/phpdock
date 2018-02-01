@@ -31,6 +31,8 @@ phpdock commands --desc
 phpdock local --desc
 phpdock global --desc
 phpdock install --desc
+phpdock uninstall --desc
+phpdock version --desc
 phpdock versions --desc
 }
 
