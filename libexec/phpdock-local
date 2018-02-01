@@ -11,7 +11,7 @@ MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 # Function to show a descriptions in phpdock script help
 function show_desc {
   cat <<HELP
-  local         Set or show the local application-specific php version
+  $COMMAND         Set or show the local application-specific php version
 HELP
 }
 
@@ -33,7 +33,7 @@ environment variables takes precedence over local
 and global versions.
 
 <version> should be a string matching a php version known to phpdock
-see 'phpdock versions'
+see '$PROG versions'
 
 More information at https://github.com/lucasdc6/phpdock/README.md
 HELP
