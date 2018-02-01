@@ -93,7 +93,7 @@ while true ; do
   esac
 done
 
-VERSION=(`phpdock versions | grep -w "$1" || true`)
+VERSION=(`phpdock versions | grep "$1" || true`)
 
 [ "${#VERSION[@]}" -eq 0 ] && ( echo "phpdock: version \`$1' not installed"; exit 1 )
 
