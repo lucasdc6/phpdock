@@ -15,8 +15,8 @@ if [ -n "$PHPDOCK_DEBUG" ]; then
 fi
 
 # Get the basename and main path of script
-PROG=`basename $0`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+export PROG=`basename $0`
+export MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 shopt -s nullglob
 
@@ -24,19 +24,40 @@ export PATH="$MAIN_PATH/libexec:${PATH}"
 
 shopt -u nullglob
 
+abort() {
+  { if [ "$#" -eq 0 ]; then cat -
+    else echo "phpdock: $*"
+    fi
+  } >&2
+  exit 1
+}
 
-COMMANDS=(`find $MAIN_PATH/libexec/phpdock-* -maxdepth 1 -type f -executable`)
 
-# Show help if non arguments passed to script
-[ "$#" -eq 0 ] && ( phpdock-help; exit 1)
+command="$1"
+case "$command" in
+"" )
+  { phpdock-help
+  } | abort
+  ;;
+-v | --version )
+  exec phpdock---version
+  ;;
+-h | --help )
+  exec phpdock-help
+  ;;
+* )
+  command_path="$(command -v "phpdock-$command" || true)"
+  [ -n "$command_path" ] || abort "no such command \`$command'"
 
-COMMAND="$MAIN_PATH/libexec/phpdock-$1"
-COMMAND_NAME=$1
-shift
-
-if [ -x $COMMAND ]
-then
-  $COMMAND $@
-else
-  echo "$PROG: no such command '$COMMAND_NAME'"
-fi
+  shift 1
+  if [ "$1" = --help ]; then
+    if [[ "$command" == "sh-"* ]]; then
+      echo "phpdock help \"$command\""
+    else
+      exec phpdock-help "$command"
+    fi
+  else
+    exec "$command_path" "$@"
+  fi
+  ;;
+esac

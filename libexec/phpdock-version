@@ -1,22 +1,20 @@
 #!/bin/bash
 # Summary: Show the current php version and its origin
-# Usage: $PROG $COMMAND
+# Usage: phpdock version
 #
 # Shows the currently selected php version and how it was
 # selected. 
-# To obtain only the version string, use \`phpdock version-name'.
+# To obtain only the version string, use `phpdock version-name'.
 # To obtaing only the path to origin file who set the version, use
-# \`phpdock version-origin'.
+# `phpdock version-origin'.
 #
-# More information at https://github.com/lucasdc6/phpdock/README.md
+# More information at https://github.com/lucasdc6/phpdock#readme
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
-PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 function upsearch {
   slashes=${PWD//[^\/]/}
@@ -29,11 +27,8 @@ function upsearch {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,name,help -n $PROG -- "$@"`
+TEMP=`getopt -o '' --long apache,name -n $PROG -- "$@"`
 eval set -- "$TEMP"
-
-# default apache value
-ONLY_NAME=false
 
 # Parse arguments
 while true ; do
@@ -41,10 +36,6 @@ while true ; do
     --apache)
       APACHE="--apache"
       shift;;
-    -h|--help)
-      phpdock-help $COMMAND
-      shift
-      exit 0;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac

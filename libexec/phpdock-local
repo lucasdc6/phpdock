@@ -1,31 +1,29 @@
 #!/bin/bash
 # Summary: Set or show the local application-specific php version
-# Usage: $PROG $COMMAND [--apache]
+# Usage: phpdock local [--apache]
 #
 # Set or show php local version setted in .envrc files
 # By default, show php cli version
 #
-# When you run a php command, $PROG will look for a '.envrc'
+# When you run a php command, phpdock will look for a '.envrc'
 # file in the current directory and each parent directory with a
 # environment variable called 'PHP_CLI_DOCKER_IMAGE' for cli and
 # 'PHP_SERVER_DOCKER_IMAGE' for apache server. If no such
 # file is found in the tree, rbenv will use the global php version
-# specified with '$PROG global'. A version specified with the
+# specified with 'phpdock global'. A version specified with the
 # environment variables takes precedence over local
 # and global versions.
 #
 # <version> should be a string matching a php version known to phpdock
-# see '$PROG versions'
+# see 'phpdock versions'
 #
-# More information at https://github.com/lucasdc6/phpdock/README.md
+# More information at https://github.com/lucasdc6/phpdock#readme
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
-PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 function upsearch {
   slashes=${PWD//[^\/]/}
@@ -99,26 +97,22 @@ function change_apache_local {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,unset,help -n $PROG -- "$@"`
+TEMP=`getopt -o '' --long apache,unset -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default value of apache
-APACHE=false
+MODE=php
 OPTION=set
 
 # Parse arguments
 while true ; do
   case "$1" in
     --apache)
-      APACHE=true
+      MODE=apache
       shift;;
     --unset)
       OPTION=unset
       shift;;
-    -h|--help)
-      phpdock-help $COMMAND
-      shift
-      exit 0;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac
@@ -126,16 +120,11 @@ done
 
 case "$OPTION" in
   set)
-    if [ $APACHE = true ]
-    then
-      change_apache_local $1
-    else
-      change_php_local $1
-    fi
+    change_${MODE}_local $1
   ;;
   unset)
     ENVRC=`upsearch ".envrc"`
-    if [ $APACHE = true ]
+    if [ "$MODE" = "apache" ]
     then
       change_file $ENVRC false "PHP_SERVER_DOCKER_IMAGE" true
     else

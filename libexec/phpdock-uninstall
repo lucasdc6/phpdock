@@ -1,22 +1,20 @@
 #!/bin/bash
 # Summary: Uninstall a specific php version
-# Usage: $PROG $COMMAND
+# Usage: phpdock uninstall
 #
 #  -f  Attempt to remove the specified version without prompting
 #      for confirmation. If the version does not exist, do not
 #      display an error message.
 #
-# See \`phpdock versions\` for a complete list of installed versions.
+# See `phpdock versions` for a complete list of installed versions.
 #
-# More information at https://github.com/lucasdc6/phpdock/README.md
+# More information at https://github.com/lucasdc6/phpdock#readme
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
-PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 [ "$#" -eq 0 ] && ( phpdock-help $COMMAND; exit 0 )
 
@@ -60,7 +58,7 @@ function createmenu {
 }
 
 # Config getopt
-TEMP=`getopt -o f,h --long force,help -n $PROG -- "$@"`
+TEMP=`getopt -o f --long force -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # Parse arguments
@@ -69,10 +67,6 @@ while true ; do
     -f|--force)
       OPTIONS="-f"
       shift;;
-    -h|--help)
-      phpdock-help $COMMAND
-      shift
-      exit 0;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac

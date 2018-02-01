@@ -1,29 +1,27 @@
 #!/bin/bash
 # Summary: Set or show the global php version
-# Usage: $PROG $COMMAND [--apache]
-#        $PROG $COMMAND <version> [--apache]
+# Usage: phpdock global [-a|--apache]
+#        phpdock global <version> [-a|--apache]
 #
-# Set or show php global version setted in $MAIN_PATH/etc/php_global
+# Set or show php global version setted
 # By default, show php cli version
 #
 # You can override the global version at any time by setting a
-# directory-specific version with '$PROG local' or by setting
+# directory-specific version with 'phpdock local' or by setting
 # the 'PHP_CLI_DOCKER_IMAGE' and 'PHP_SERVER_DOCKER_IMAGE'
 # environments variables.
 #
-# <version> should be a string matching a php version known to $PROG
-# see '$PROG versions'
+# <version> should be a string matching a php version known to phpdock
+# see 'phpdock versions'
 #
-# More information at https://github.com/lucasdc6/phpdock/README.md
+# More information at https://github.com/lucasdc6/phpdock#readme
 
 set -e
 
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
-PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 # Function to update configuration's files
 # Arguments
@@ -79,29 +77,21 @@ function change_apache_global {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,help -n $PROG -- "$@"`
+TEMP=`getopt -o '' --long apache -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default value of apache
-APACHE=false
+MODE=php
 
 # Parse arguments
 while true ; do
   case "$1" in
     --apache)
-      APACHE=true
+      MODE=apache
       shift;;
-    -h|--help)
-      phpdock-help $COMMAND
-      exit;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac
 done
 
-if [ $APACHE = true ]
-then
-  change_apache_global $1
-else
-  change_php_global $1
-fi
+change_${MODE}_global $1

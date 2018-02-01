@@ -1,8 +1,8 @@
 #!/bin/bash
 # Summary: Manage repositories
-# Usage: $PROG $COMMAND -l/--list
-#        $PROG $COMMAND -a/--add <repository>
-#        $PROG $COMMAND -d/--delete <repository>
+# Usage: phpdock repositories -l/--list
+#        phpdock repositories -a/--add <repository>
+#        phpdock repositories -d/--delete <repository>
 #
 #  -l/--list    List all repositories
 #  -a/--add     Add a repository
@@ -10,16 +10,14 @@
 #
 # <repository> should be a string matching a docker registry
 #
-# More information at https://github.com/lucasdc6/phpdock/README.md
+# More information at https://github.com/lucasdc6/phpdock#readme
 
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
-PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 # Avaiables repositories
 if [ ! -f "$MAIN_PATH/etc/repositories" ]
@@ -88,7 +86,7 @@ function delete_repo
 [ "$#" -eq 0 ] && ( phpdock-help $COMMAND; exit 1)
 
 # Config getopt
-TEMP=`getopt -o l,a:,d:,h --long list,add:,delete:,help -n $PROG -- "$@"`
+TEMP=`getopt -o l,a:,d: --long list,add:,delete: -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # Parse arguments
@@ -104,10 +102,6 @@ while true ; do
     -d|--delete)
       delete_repo $2
       shift 2
-      exit 0;;
-    -h|--help)
-      phpdock-help $COMMAND
-      shift
       exit 0;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;

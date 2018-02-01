@@ -1,19 +1,17 @@
 #!/bin/bash
 # Summary: List all php versions available to phpdock
-# Usage: $PROG $COMMAND [--apache]
+# Usage: phpdock versions [--apache]
 #
-# List all php versions available to $PROG
+# List all php versions available to phpdock
 # By default, show cli versions
 #
-# More information at https://github.com/lucasdc6/phpdock/README.md
+# More information at https://github.com/lucasdc6/phpdock#readme
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
-PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
 
@@ -28,30 +26,21 @@ function show_versions {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,help -n $PROG -- "$@"`
+TEMP=`getopt -o '' --long apache -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
-# default value of apache
-APACHE=false
+# default mode value
+MODE="cli"
 
 # Parse arguments
 while true ; do
   case "$1" in
     --apache)
-      APACHE=true
+      MODE="apache"
       shift;;
-    -h|--help)
-      phpdock-help $COMMAND
-      shift
-      exit 0;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac
 done
 
-if [ $APACHE = true ]
-then
-  show_versions "apache"
-else
-  show_versions "cli"
-fi
+show_versions $MODE

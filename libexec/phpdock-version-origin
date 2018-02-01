@@ -5,9 +5,7 @@ set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
-PROG=`basename $0 | cut -d- -f1`
 COMMAND=`basename $0 | cut -d- -f2`
-MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
 function upsearch {
   slashes=${PWD//[^\/]/}
@@ -20,7 +18,7 @@ function upsearch {
 }
 
 # Config getopt
-TEMP=`getopt -o h --long apache,name,help -n $PROG -- "$@"`
+TEMP=`getopt -o '' --long apache,name -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # Parse arguments
@@ -29,10 +27,6 @@ while true ; do
     --apache)
       APACHE="--apache"
       shift;;
-    -h|--help)
-      phpdock-help $COMMAND
-      shift
-      exit 0;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac
