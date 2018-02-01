@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+[ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
 PROG=`basename $0 | cut -d- -f1`
