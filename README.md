@@ -7,8 +7,20 @@ tecnología [Docker](https://github.com/docker), haciendo uso del
 phpdock fue inspirado y sigue el modelo de [rbenv](https://github.com/rbenv/rbenv),
 [goenv](https://github.com/syndbg/goenv) y [pyenv](https://github.com/pyenv/pyenv)
 
+## Contenidos
+
+* [Instalación](#instalación)
+  * [Local](#local)
+* [Uso](#uso)
+* [Agregar repositorios](#agregar-repositorios-propios)
+* [Variables de ambiente](#variables-de-ambiente)
+* [Instalar una versión de php](#instalar-una-versión-de-php)
+  * [Manual](#manual)
+  * [Usando archivo .php-version](#usando-archivo-.php-version)
 
 ## Instalación
+
+### Local
 
 1. Clonar el repositorio en ~/.phpdock
 ```bash
@@ -76,6 +88,7 @@ manera:
 ```
 
 Por ejemplo, para agregar el repositorio oficial de php, solo hace falta
+
 ejecutar:
 
 ```bash
@@ -91,6 +104,13 @@ Para el correcto uso de este script, se debe entender que funciona seteando
 variables de ambiente que usará el script php y php-server.
 Este script **NO** instala ninguna versión de php provistas por el sistema, sino
 que simplemente baja la imagen docker del repositorio especificado.
+
+Variable | Descripción
+--------------------------------
+`PHP_CLI_DOCKER_IMAGE` | Variable para especificar versión de imagen php cli
+`PHP_SERVER_DOCKER_IMAGE` | Variable para especificar versión de imagen php con apache
+`PHPDOCK_DEBUG` | Muestra información de debug
+`PHPDOCKPATH` | Dirección raíz del programa phpdock
 
 ## Instalar una versión de php
 
