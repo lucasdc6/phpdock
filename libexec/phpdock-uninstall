@@ -1,0 +1,101 @@
+#!/bin/bash
+
+set -e
+[ -n "$PHPDOCK_DEBUG" ] && set -x
+
+# Set config variables
+PROG=`basename $0 | cut -d- -f1`
+COMMAND=`basename $0 | cut -d- -f2`
+MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
+
+# Function to show a descriptions in phpdock script help
+function show_desc {
+  cat <<HELP
+  uninstall     Uninstall a specific php version
+HELP
+}
+
+# Function to show a help message
+function show_help {
+  cat <<HELP
+Usage: $PROG $COMMAND
+
+  -f  Attempt to remove the specified version without prompting
+      for confirmation. If the version does not exist, do not
+      display an error message.
+
+See \`phpdock versions\` for a complete list of installed versions.
+
+More information at https://github.com/lucasdc6/phpdock/README.md
+HELP
+}
+
+[ "$#" -eq 0 ] && ( show_help; exit 0 )
+
+# Function to uninstall a php version
+# Arguments
+#   1: php version
+function uninstall_php_version {
+  docker image rm $1 -f
+}
+
+# Function to generate versions list from repositories
+# Arguments
+#   1: array of elements
+function createmenu {
+  echo "Select a version to uninstall"
+  select option; do # in "$@" is the default
+    if [ "$REPLY" -eq $# ];
+    then
+      echo "Exiting..."
+      break;
+    elif [ 1 -le "$REPLY" ] && [ "$REPLY" -le $(($#-1)) ];
+    then
+      echo "You selected $option which is option $REPLY"
+      [ "$OPTIONS" = "-f"  ] && ( echo "Removing docker image.."; uninstall_php_version $option; echo -e "\n$option removed"; exit 1; )
+      echo "Are you shure?"
+      select response in yes no; do
+        if [ "$response" = "yes" ]; then
+          echo "Removing docker image.."
+          uninstall_php_version $option
+          echo -e "\n$option removed"
+        elif [ "$response" = "no" ]; then
+          echo "Exiting..."
+        fi
+        break;
+      done
+      break;
+    else
+      echo "Incorrect Input: Select a number 1-$#"
+    fi
+  done
+}
+
+# Config getopt
+TEMP=`getopt -o f,h --long force,desc,help -n $PROG -- "$@"`
+eval set -- "$TEMP"
+
+# Parse arguments
+while true ; do
+  case "$1" in
+    --desc)
+      show_desc
+      exit ;;
+    -f|--force)
+      OPTIONS="-f"
+      shift;;
+    -h|--help)
+      show_help
+      shift
+      exit 0;;
+    --) shift ; break ;;
+    *) echo "Internal error!" ; exit 1 ;;
+  esac
+done
+
+VERSION=(`phpdock versions | grep -w "$1" || true`)
+
+[ "${#VERSION[@]}" -eq 0 ] && ( echo "phpdock: version \`$1' not installed"; exit 1 )
+
+VERSION=(${VERSION[@]} "exit")
+createmenu ${VERSION[@]}
