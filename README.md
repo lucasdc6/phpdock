@@ -1,162 +1,142 @@
 # phpdock
 
-phpdock es un manejador de versiones de php locales, que utiliza como principal
-tecnología [Docker](https://github.com/docker), haciendo uso del 
-[repositorio oficial](https://hub.docker.com/\_/php/) de php en Docker Hub.
+phpdock is a version manager from the language php, powered with
+[Docker](https://github.com/docker), using principally the
+[oficial php repository](https://hub.docker.com/\_/php/) in Docker Hub.
 
-phpdock fue inspirado y sigue el modelo de [rbenv](https://github.com/rbenv/rbenv),
-[goenv](https://github.com/syndbg/goenv) y [pyenv](https://github.com/pyenv/pyenv)
+phpdock is inspired in [rbenv](https://github.com/rbenv/rbenv),
+[goenv](https://github.com/syndbg/goenv) and [pyenv](https://github.com/pyenv/pyenv)
 
-## Contenidos
+## Contents
 
-* [Instalación](#instalación)
+* [Install](#install)
   * [Local](#local)
-* [Uso](#uso)
-* [Agregar repositorios](#agregar-repositorios-propios)
-* [Variables de ambiente](#variables-de-ambiente)
-* [Instalar una versión de php](#instalar-una-versión-de-php)
-  * [Manual](#manual)
-  * [Usando archivo .php-version](#usando-archivo-.php-version)
+* [Use](#use)
+* [Add repositories](#add-repositories)
+* [Environment variables](#envoiroment-variables)
+* [Install a new php version](#install-php-version)
+  * [Manually](#manually)
+  * [Using .php-version file](#using-.php-version-file)
 
-## Instalación
+## Install
 
 ### Local
 
-1. Clonar el repositorio en ~/.phpdock
+1. Clone phpdock into ~/.phpdock
 ```bash
 $ git clone git@github.com:lucasdc6/phpdock.git ~/.phpdock
 ```
 
-2. Agregar el directorio ~/.phpdock/bin para contar con todos los ejecutables
+2. Add to the directory ~/.phpdock/bin to `$PATH`
 ```bash
 $ echo 'export PATH="$HOME/.phpdock/bin:$PATH"' >> ~/.bash_profile
 ```
 
-3. Agregar el archivo php_global y la variable PHPDOCKPATH al bashrc
+3. Add the file php_global and the variable `$PHPDOCKPATH` to the bashrc
 ```bash
 $ echo 'source ~/.phpdock/etc/php_global' >> ~/.bash_profile
 $ echo 'export PHPDOCKPATH="$HOME/.phpdock"' >> ~/.bash_profile
 ```
-En ubuntu Ubuntu modificar ~/.bashrc
+*Ubuntu desktop note:* Modify your `~/.bashrc` instead of `~/.bash_profile`
 
-En Zsh modificar ~/.zshrc
+*Zsh note:* Modify ~/.zshrc
 
-4. Reiniciar la terminar para efectuar los cambios.
+4. Restart your shell so that PATH changes take effect. (Opening a new terminal
+tab will usually do it.)
 
 
-## Uso
+## Use
 
-Con el fin de facilitar el uso de los script php y php-server, se provee este
-script con 5 opciones relacionadas al manejo de versiones:
-  * Setear versión global (requiere reinicio de terminal)
-  * Setear versión local (no requiere reinicio de terminal)
-  * Instalar una versión (docker pull de los repositorios dados)
-  * Listar versiones instaladas
-  * Listar opciones disponibles para bajar de los repositorios
+The script `phpdock` is intended to facilitate the use of the scripts
+`php` and `php-server` (See bin directory)
+Availables scripts commands:
+  * Set a global php version (shell restart is needed)
+  * Set a local php version (shell restart isn't needed)
+  * Install docker php images (and php with apache!!)
+  * List installed versions
+  * List availables versions on docker repositories
 
-Además se cuenta con 3 opciones para el manejo de los repositorios docker:
-  * Listar repositorios
-  * Agregar repositorio
-  * Eliminar repositorio
+Manage availables repositories:
+  * List repositories
+  * Add repository
+  * Delete repository
 
-Para el manejo de los repositorios, se cuenta con un archivo de configuración
-disponible en el directorio etc, llamado _repositories._
+The availables repositories is stored in a file in `etc` directory
 
-En este archivo se cuenta con una lista de repositorios separados por saltos
-de líneas.
+Repositories file use complete docker repositories name.
 
-Se recomieda no editar este archivo a mano.
+*Don't* delete the repositories file!
 
-Es muy importante además **NO** eliminar dicho archivo de configuración.
+## Add repositories
 
-## Agregar repositorios propios
+All the repositories added, need docker images with a specific tag format.
 
-Para agregar un repositorio propio, simplemente se deben seguir una simple regla
-para que el script pueda reconocer las imágenes.
+Tag format:
 
-La regla a seguir, es taguear las imágenes con un nombre que contenga "cli" o
-"apache", dependiendo del tipo de imagen que sea.
+All the tags need one of the following words:
 
-Las imágenes tagueadas con un "cli" en su nombre serán utilizadas por el script
-php, mientras que las "apache", serán utilizadas por el script php-server
+* cli: To php images (used by `php` script)
+* apache: To php with apache images (user by `php-server` script)
 
-De seguir esta regla, solo hace falta agregar el repositorio de la siguiente
-manera:
+The format is taken from the php oficial repository
+(see [oficial php repository](https://hub.docker.com/\_/php/))
 
+Add a repository
 ```bash
-  $ phpdock repositories --add <NOMBRE DEL REPOSITORIO>
+  $ phpdock repositories --add <COMPLETE_REPOSITORY_NAME>
 ```
 
-Por ejemplo, para agregar el repositorio oficial de php, solo hace falta
-
-ejecutar:
+Eg:
+Add the oficial php repository (added by default)
 
 ```bash
   $ phpdock repositories --add php
 ```
 
-Como se puede notar, las imágenes en este repositorio son tagueadas siguiendo la
-regla anteriormente nombrada.
+## Environment variables
 
-## Variables de ambiente
+The script *doesn't* install php binaries!
+The script pull docker images and reference those images via envoiroment
+varialbes, used by the scripts `php` and `php-server`
 
-Para el correcto uso de este script, se debe entender que funciona seteando
-variables de ambiente que usará el script php y php-server.
-Este script **NO** instala ninguna versión de php provistas por el sistema, sino
-que simplemente baja la imagen docker del repositorio especificado.
-
-Variable | Descripción
+Variable | Description
 ---------|------------
-`PHP_CLI_DOCKER_IMAGE` | Variable para especificar versión de imagen php cli
-`PHP_SERVER_DOCKER_IMAGE` | Variable para especificar versión de imagen php con apache
-`PHPDOCK_DEBUG` | Muestra información de debug
-`PHPDOCKPATH` | Dirección raíz del programa phpdock
+`PHP_CLI_DOCKER_IMAGE` | Specify a docker image to `php` script
+`PHP_SERVER_DOCKER_IMAGE` | Specify a docker image to `php-server` script
+`PHPDOCK_DEBUG` | Enable debug mode
+`PHPDOCKPATH` | Root path to repository
 
-## Instalar una versión de php
-
-Si bien phpdock no instala versiones de php, sino que clona imágenes docker y
-las acondiciona de manera que sea transparente su uso para el programador, vamos
-a referirnos a la acción de clonar dichas imágenes como instalación.
-
-Existen 2 maneras de instalar una nueva versión de php:
+## Install php version
 
 ### Manual
 
-La manera manual de instalar una nueva versión es la siguiente:
+Add a new php version:
 
-1. Primero se debe conocer el repositorio y la versión (tag de docker) de la
-   imagen a instalar.
+1. Firts, search the *complete* docker image name (repository+tag)
 
-   Para esto se puede consultar el comando "install" con la opción "--list":
+   Show all availables docker images in known repositories:
 
    ```bash
     phpdock install --list
-    # lista de versiones
+    # docker image's list
     ```
-2. Una vez reconocido el nombre y versión de la imagen, se debe simplemente
-   especificarlo de la siguiente manera:
-   Por ejemplo, vamos a instalar la versión 7.1.9 del repositorio docker oficial
-   de php.
+2. Once identified the docker image, send it as argument to `phpdock install`
+   Eg, we need the php 7.2.0 from oficial repository
 
    ```bash
-    phpdock install php:7.1.9
+    phpdock install php:7.2.0-cli
    ```
 
-### Usando archivo .php-version
+### Using .php-version file
 
-Si se conoce la versión de php se se va a utilizar en el proyecto de antemano,
-se puede crear un archivo llamado ".php-version", en el cual se especifique
-dicha versión, para facilitar la búsqueda de la imagen docker ideal para su
-proyecto.
+If you know the php version needed for the project, you can create a file named
+`.php-version` and put the version (only the number).
 
-Una vez creado el archivo, simplemente hace falta ejecutar el comando "install"
-de phpdock sin ningún argumento, de la siguiente manera:
+This make easiest to export the project.
 
+Once created the file, run the follow:
    ```bash
     phpdock install
    ```
-
-Con esto, se desplazará un menú con todas las imágenes docker de los
-repositorios que cumplan con dicha versión.
-Una vez escrito el número y presionado enter, comenzara el proceso de pull de la
-imagen docker.
+This show you a selectable menu with all docker images that match the version
+specified
