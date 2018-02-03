@@ -23,6 +23,10 @@ COMMAND=`basename $0 | cut -d- -f2`
 #   1: php version
 function uninstall_php_version {
   docker image rm $1 -f
+  echo -e "\n$option removed\n"
+  VERSIONS=( `phpdock-versions` )
+  [ `phpdock-global` = "$1" ] && ( phpdock-global ${VERSIONS[0]})
+  exit 1
 }
 
 # Function to generate versions list from repositories
@@ -38,13 +42,12 @@ function createmenu {
     elif [ 1 -le "$REPLY" ] && [ "$REPLY" -le $(($#-1)) ];
     then
       echo "You selected $option which is option $REPLY"
-      [ "$OPTIONS" = "-f"  ] && ( echo "Removing docker image.."; uninstall_php_version $option; echo -e "\n$option removed"; exit 1; )
+      [ "$OPTIONS" = "-f"  ] && ( echo "Removing docker image.."; uninstall_php_version $option; )
       echo "Are you shure?"
       select response in yes no; do
         if [ "$response" = "yes" ]; then
           echo "Removing docker image.."
           uninstall_php_version $option
-          echo -e "\n$option removed"
         elif [ "$response" = "no" ]; then
           echo "Exiting..."
         fi
