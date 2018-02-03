@@ -13,10 +13,10 @@ phpdock is inspired in [rbenv](https://github.com/rbenv/rbenv),
   * [Local](#local)
 * [Use](#use)
 * [Add repositories](#add-repositories)
-* [Environment variables](#envoiroment-variables)
+* [Environment variables](#environment-variables)
 * [Install a new php version](#install-php-version)
   * [Manually](#manually)
-  * [Using .php-version file](#using-.php-version-file)
+  * [Using .php-version file](#using-php-version-file)
 
 ## Install
 
