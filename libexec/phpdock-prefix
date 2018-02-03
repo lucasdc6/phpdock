@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Summary: Display prefix for a Ruby version
+# Usage: phpdock prefix [<version>]
+#
+# Displays the directory where a Ruby version is installed. If no
+# version is given, `phpdock prefix' displays the location of the
+# currently selected version.
+
+set -e
+[ -n "$PHPDOCK_DEBUG" ] && set -x
+
+# Provide phpdock completions
+if [ "$1" = "--complete" ]; then
+  echo system
+  exec phpdock-versions --bare
+fi
+
+if [ -n "$1" ]; then
+  export PHPDOCK_VERSION="$1"
+elif [ -z "$PHPDOCK_VERSION" ]; then
+  PHPDOCK_VERSION="$(phpdock-version-name)"
+fi
+
+PHPDOCK_PREFIX_PATH="${PHPDOCK_ROOT}/versions/${PHPDOCK_VERSION}"
+if [ ! -d "$PHPDOCK_PREFIX_PATH" ]; then
+  echo "phpdock: version \`${PHPDOCK_VERSION}' not installed" >&2
+  exit 1
+fi
+
+echo "$PHPDOCK_PREFIX_PATH"

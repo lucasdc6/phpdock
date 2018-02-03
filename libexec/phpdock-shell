@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+#
+# Summary: Set or show the shell-specific Ruby version
+#
+# Usage: phpdock shell <version>
+#        phpdock shell -
+#        phpdock shell --unset
+#
+# Sets a shell-specific Ruby version by setting the `PHPDOCK_VERSION'
+# environment variable in your shell. This version overrides local
+# application-specific versions and the global version.
+#
+# <version> should be a string matching a Ruby version known to phpdock.
+# The special version string `system' will use your default system Ruby.
+# Run `phpdock versions' for a list of available Ruby versions.
+#
+# When `-` is passed instead of the version string, the previously set
+# version will be restored. With `--unset`, the `PHPDOCK_VERSION`
+# environment variable gets unset, restoring the environment to the
+# state before the first `phpdock shell` call.
+
+set -e
+[ -n "$PHPDOCK_DEBUG" ] && set -x
+
+# Provide phpdock completions
+if [ "$1" = "--complete" ]; then
+  echo --unset
+  echo system
+  exec phpdock-versions --bare
+fi
+
+version="$1"
+shell="$(basename "${PHPDOCK_SHELL:-$SHELL}")"
+
+if [ -z "$version" ]; then
+  if [ -z "$PHPDOCK_VERSION" ]; then
+    echo "phpdock: no shell-specific version configured" >&2
+    exit 1
+  else
+    echo 'echo "$PHPDOCK_VERSION"'
+    exit
+  fi
+fi
+
+if [ "$version" = "--unset" ]; then
+  case "$shell" in
+  fish )
+    echo 'set -gu PHPDOCK_VERSION_OLD "$PHPDOCK_VERSION"'
+    echo "set -e PHPDOCK_VERSION"
+    ;;
+  * )
+    echo 'PHPDOCK_VERSION_OLD="$PHPDOCK_VERSION"'
+    echo "unset PHPDOCK_VERSION"
+    ;;
+  esac
+  exit
+fi
+
+if [ "$version" = "-" ]; then
+  case "$shell" in
+  fish )
+    cat <<EOS
+if set -q PHPDOCK_VERSION_OLD
+  if [ -n "\$PHPDOCK_VERSION_OLD" ]
+    set PHPDOCK_VERSION_OLD_ "\$PHPDOCK_VERSION"
+    set -gx PHPDOCK_VERSION "\$PHPDOCK_VERSION_OLD"
+    set -gu PHPDOCK_VERSION_OLD "\$PHPDOCK_VERSION_OLD_"
+    set -e PHPDOCK_VERSION_OLD_
+  else
+    set -gu PHPDOCK_VERSION_OLD "\$PHPDOCK_VERSION"
+    set -e PHPDOCK_VERSION
+  end
+else
+  echo "phpdock: PHPDOCK_VERSION_OLD is not set" >&2
+  false
+end
+EOS
+    ;;
+  * )
+    cat <<EOS
+if [ -n "\${PHPDOCK_VERSION_OLD+x}" ]; then
+  if [ -n "\$PHPDOCK_VERSION_OLD" ]; then
+    PHPDOCK_VERSION_OLD_="\$PHPDOCK_VERSION"
+    export PHPDOCK_VERSION="\$PHPDOCK_VERSION_OLD"
+    PHPDOCK_VERSION_OLD="\$PHPDOCK_VERSION_OLD_"
+    unset PHPDOCK_VERSION_OLD_
+  else
+    PHPDOCK_VERSION_OLD="\$PHPDOCK_VERSION"
+    unset PHPDOCK_VERSION
+  fi
+else
+  echo "phpdock: PHPDOCK_VERSION_OLD is not set" >&2
+  false
+fi
+EOS
+    ;;
+  esac
+  exit
+fi
+
+containsElement () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
+
+# Make sure the specified version is installed.
+VERSIONS=(`phpdock-versions`)
+if containsElement $version ${VERSIONS[@]}  >/dev/null; then
+  if [ "$version" != "$PHPDOCK_VERSION" ]; then
+    case "$shell" in
+    fish )
+      echo 'set -gu PHPDOCK_VERSION_OLD "$PHPDOCK_VERSION"'
+      echo "set -gx PHPDOCK_VERSION \"$version\""
+      ;;
+    * )
+      echo 'PHPDOCK_VERSION_OLD="$PHPDOCK_VERSION"'
+      echo "export PHPDOCK_VERSION=\"$version\""
+      ;;
+    esac
+  fi
+else
+  echo "false"
+  exit 1
+fi
