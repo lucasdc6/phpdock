@@ -34,7 +34,7 @@ function change_file {
   if [ ! -e "$1" ]
   then
     echo "export $3=$2" > $1
-  elif grep "^export $3=[[:print:]]*$" $1
+  elif grep "^export $3=[[:print:]]*$" $1 > /dev/null
   then
     sed -i -- "s~export $3=.*~export $3=$2~g" $1
   else
