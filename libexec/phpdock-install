@@ -38,6 +38,12 @@ PHP_VERSION_FILE=`upsearch ".php-version"`
 TEMP=`getopt -o l --long list,apache -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
+# Avaiables repositories
+if [ ! -f "$MAIN_PATH/etc/repositories" ]
+then
+  echo -e "$MAIN_PATH/etc/repositories missing, default value setted\nDefault value: php\n"
+  echo "php" > "$MAIN_PATH/etc/repositories"
+fi
 PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
 
 # Function to install a php version
