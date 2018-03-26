@@ -22,7 +22,7 @@ COMMAND=`basename $0 | cut -d- -f2`
 # Avaiables repositories
 if [ ! -f "$MAIN_PATH/etc/repositories" ]
 then
-  echo -e "$MAIN_PATH/etc/repositories missing, default value setted\nDefault value: php"
+  echo -e "$MAIN_PATH/etc/repositories missing, default value setted\nDefault value: php\n"
   echo "php" > "$MAIN_PATH/etc/repositories"
 fi
 PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
