@@ -155,7 +155,7 @@ if [ -z "$1" ] || [ "$1" == "phpdock" ]; then
   [ -z "$usage" ] || exit
   echo
   echo "Some useful phpdock commands are:"
-  print_summaries commands local global install uninstall repositories version versions
+  print_summaries commands local global shell install uninstall repositories version versions
   echo
   echo "See \`phpdock help <command>' for information on a specific command."
   echo "For full documentation, see: https://github.com/lucasdc6/phpdock#readme"
