@@ -2,8 +2,6 @@
 
 set -e
 
-[ -n "$PHPDOCK_DEBUG" ] && set -x
-
 if [ "$1" = "--debug" ]; then
   export PHPDOCK_DEBUG=true
   shift
@@ -18,77 +16,83 @@ fi
 export PROG=`basename $0`
 export MAIN_PATH=`realpath $0 | xargs dirname | xargs dirname`
 
-if enable -f "${BASH_SOURCE%/*}"/../libexec/rbenv-realpath.dylib realpath 2>/dev/null; then
-  abs_dirname() {
-    local path="$(realpath "$1")"
-    echo "${path%/*}"
-  }
-else
-  [ -z "$PHPDOCK_NATIVE_EXT" ] || abort "failed to load \`realpath' builtin"
-
-  READLINK=$(type -p greadlink readlink | head -1)
-  [ -n "$READLINK" ] || abort "cannot find readlink - are you missing GNU coreutils?"
-
-  resolve_link() {
-    $READLINK "$1"
-  }
-
-  abs_dirname() {
-    local cwd="$PWD"
-    local path="$1"
-
-    while [ -n "$path" ]; do
-      cd "${path%/*}"
-      local name="${path##*/}"
-      path="$(resolve_link "$name" || true)"
-    done
-
-    pwd
-    cd "$cwd"
-  }
-fi
-
-
-shopt -s nullglob
-
-export PATH="$MAIN_PATH/libexec:${PATH}"
-
-shopt -u nullglob
-
 abort() {
   { if [ "$#" -eq 0 ]; then cat -
-    else echo "phpdock: $*"
+    else echo "phpdock $*"
     fi
   } >&2
   exit 1
 }
 
+[ -z "$PHPDOCK_NATIVE_EXT" ] || abort "failed to load \`realpath' builtin"
+
+READLINK=$(type -p greadlink readlink | head -1)
+[ -n "$READLINK" ] || abort "cannot find readlink - are you missing GNU coreutils?"
+
+resolve_link() {
+  $READLINK "$1"
+}
+
+abs_dirname() {
+  local cwd="$PWD"
+  local path="$1"
+
+  while [ -n "$path" ]; do
+    cd "${path%/*}"
+    local name="${path##*/}"
+    path="$(resolve_link "$name" || true)"
+  done
+
+  pwd
+  cd "$cwd"
+}
+
+if [ -z "${PHPDOCK_ROOT}" ]; then
+  PHPDOCK_ROOT="${HOME}/.phpdock"
+else
+  PHPDOCK_ROOT="${PHPDOCK_ROOT%/}"
+fi
+export PHPDOCK_ROOT
+
+if [ -z "${PHPDOCK_DIR}" ]; then
+  PHPDOCK_DIR="$PWD"
+else
+  [[ $PHPDOCK_DIR == /* ]] || PHPDOCK_DIR="$PWD/$PHPDOCK_DIR"
+  cd "$PHPDOCK_DIR" 2>/dev/null || abort "cannot change working directory to \ `$PHPDOCK_DIR`"
+  PHPDOCK_DIR="$PWD"
+  cd $OLDPWD
+fi
+export PHPDOCK_DIR
+
+shopt -s nullglob
+
+export PATH="$MAIN_PATH/libexec:${PATH}"
 
 command="$1"
 case "$command" in
-"" )
-  { phpdock-help
-  } | abort
-  ;;
--v | --version )
-  exec phpdock---version
-  ;;
--h | --help )
-  exec phpdock-help
-  ;;
-* )
-  command_path="$(command -v "phpdock-$command" || true)"
-  [ -n "$command_path" ] || abort "no such command \`$command'"
+  "" )
+    { phpdock-help
+    } | abort
+    ;;
+  -v | --version )
+    exec phpdock---version
+    ;;
+  -h | --help )
+    exec phpdock-help
+    ;;
+  * )
+    command_path="$(command -v "phpdock-$command" || true)"
+    [ -n "$command_path" ] || abort "no such command \`$command'"
 
-  shift 1
-  if [ "$1" = --help ]; then
-    if [[ "$command" == "sh-"* ]]; then
-      echo "phpdock help \"$command\""
+    shift 1
+    if [ "$1" = --help ]; then
+      if [[ "$command" == "sh-"* ]]; then
+        echo "phpdock help \"$command\""
+      else
+        exec phpdock-help "$command"
+      fi
     else
-      exec phpdock-help "$command"
+      exec "$command_path" "$@"
     fi
-  else
-    exec "$command_path" "$@"
-  fi
-  ;;
+    ;;
 esac
