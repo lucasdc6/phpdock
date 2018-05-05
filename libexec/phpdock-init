@@ -12,6 +12,7 @@ if [ "$1" = "--complete" ]; then
   echo fish
   echo ksh
   echo zsh
+  echo --help
   exit
 fi
 
