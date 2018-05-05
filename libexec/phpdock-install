@@ -22,6 +22,7 @@ COMMAND=`basename $0 | cut -d- -f2`
 # Provide phpdock completions
 if [ "$1" = "--complete" ]; then
   echo --list
+  echo --apache
   echo --help
   exit 0
 fi
