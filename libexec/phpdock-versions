@@ -13,6 +13,15 @@ set -e
 # Set config variables
 COMMAND=`basename $0 | cut -d- -f2`
 
+# Provide phpdock completions
+if [ "$1" = "--complete" ]; then
+  if [ "$#" -eq 1 ]; then
+    echo --apache
+    echo --help
+  fi
+  exit 0
+fi
+
 PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
 
 # Function to get installed versions
@@ -21,7 +30,7 @@ PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
 function show_versions {
   for IMAGE in "${PHP_IMAGES[@]}"
   do
-    docker images | awk -v image=$IMAGE -v tag=$1 '($1 == image) && ($2 ~ tag) {print $1":"$2;}'
+    docker images | awk -v image=$IMAGE -v tag=$1 '($1 == image) && ($2 ~ tag) {print $1":"$2;}' | tee $MAIN_PATH/etc/$1_versions
   done
 }
 
