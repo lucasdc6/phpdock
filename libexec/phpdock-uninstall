@@ -16,6 +16,19 @@ set -e
 # Set config variables
 COMMAND=`basename $0 | cut -d- -f2`
 
+# Provide phpdock completions
+if [ "$1" = "--complete" ]; then
+  if echo $@ | grep "\-\-apache"; then
+    cat $MAIN_PATH/etc/apache_versions
+  else
+    cat $MAIN_PATH/etc/cli_versions
+  fi
+  echo --force
+  echo --apache
+  echo --help
+  exit 0
+fi
+
 [ "$#" -eq 0 ] && ( phpdock-help $COMMAND; exit 0 )
 
 # Function to uninstall a php version
