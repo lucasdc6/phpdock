@@ -7,9 +7,12 @@ set -e
 
 # Provide phpdock completions
 if [ "$1" = "--complete" ]; then
-  echo --sh
-  echo --no-sh
-  exit
+  if [ $# -eq 1 ]; then
+    echo --sh
+    echo --no-sh
+    echo --help
+  fi
+  exit 0
 fi
 
 if [ "$1" = "--sh" ]; then
