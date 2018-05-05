@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
-# Summary: Display prefix for a Ruby version
+# Summary: Display prefix for a php docker version
 # Usage: phpdock prefix [<version>]
 #
-# Displays the directory where a Ruby version is installed. If no
+# Displays complete image name of a php version.. If no
 # version is given, `phpdock prefix' displays the location of the
 # currently selected version.
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
-# Provide phpdock completions
+# Provide rbenv completions
 if [ "$1" = "--complete" ]; then
   echo system
   exec phpdock-versions --bare
 fi
 
 if [ -n "$1" ]; then
-  export PHPDOCK_VERSION="$1"
-elif [ -z "$PHPDOCK_VERSION" ]; then
-  PHPDOCK_VERSION="$(phpdock-version-name)"
+  export PHP_CLI_DOCKER_IMAGE="$1"
+elif [ -z "$PHP_CLI_DOCKER_IMAGE" ]; then
+  PHP_CLI_DOCKER_IMAGE="$(phpdock-version-name)"
 fi
 
-PHPDOCK_PREFIX_PATH="${PHPDOCK_ROOT}/versions/${PHPDOCK_VERSION}"
-if [ ! -d "$PHPDOCK_PREFIX_PATH" ]; then
-  echo "phpdock: version \`${PHPDOCK_VERSION}' not installed" >&2
+PHPDOCK_PREFIX=`docker images --format "{{.Repository}}:{{.Tag}}" | grep $PHP_CLI_DOCKER_IMAGE`
+if [ ! -d "$PHPDOCK_PREFIX" ]; then
+  echo "phpdock: version \`${PHP_CLI_DOCKER_IMAGE}' not installed" >&2
   exit 1
 fi
 
-echo "$PHPDOCK_PREFIX_PATH"
+echo "$RBENV_PREFIX_PATH"

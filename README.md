@@ -32,10 +32,10 @@ $ git clone git@github.com:lucasdc6/phpdock.git ~/.phpdock
 $ echo 'export PATH="$HOME/.phpdock/bin:$PATH"' >> ~/.bash_profile
 ```
 
-3. Add the file php_global and the variable `$PHPDOCKPATH` to the bashrc
+3. Add the file php_global and the variable eval sentence to the bashrc
 ```bash
+eval "$(phpdock init -)
 $ echo 'source ~/.phpdock/etc/php_global' >> ~/.bash_profile
-$ echo 'export PHPDOCKPATH="$HOME/.phpdock"' >> ~/.bash_profile
 ```
 *Ubuntu desktop note:* Modify your `~/.bashrc` instead of `~/.bash_profile`
 

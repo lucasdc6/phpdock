@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Usage: phpdock completions <command> [arg1 arg2...]
+
+set -e
+[ -n "$PHPDOCK_DEBUG" ] && set -x
+
+COMMAND="$1"
+if [ -z "$COMMAND" ]; then
+  phpdock-help --usage completions >&2
+  exit 1
+fi
+
+# Provide phpdock completions
+if [ "$COMMAND" = "--complete" ]; then
+  exec phpdock-commands
+fi
+
+COMMAND_PATH="$(command -v "phpdock-$COMMAND" || command -v "phpdock-sh-$COMMAND")"
+
+# --help is provided automatically
+#echo --help
+
+if grep -iE "^([#%]|--|//) provide phpdock completions" "$COMMAND_PATH" >/dev/null; then
+  shift
+  exec "$COMMAND_PATH" --complete "$@"
+fi

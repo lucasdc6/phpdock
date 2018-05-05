@@ -2,6 +2,7 @@
 # Summary: Set or show the global php version
 # Usage: phpdock global [-a|--apache]
 #        phpdock global <version> [-a|--apache]
+#        phpdock global --unset [-a|--apache]
 #
 # Set or show php global version setted
 # By default, show php cli version
@@ -17,11 +18,23 @@
 # More information at https://github.com/lucasdc6/phpdock#readme
 
 set -e
-
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
 # Set config variables
 COMMAND=`basename $0 | cut -d- -f2`
+
+# Provide phpdock completions
+if [ "$1" = "--complete" ]; then
+  if echo $@ | grep "\-\-apache" > /dev/null; then
+    cat $MAIN_PATH/etc/apache_versions
+  else
+    cat $MAIN_PATH/etc/cli_versions
+  fi
+  echo --unset
+  echo --apache
+  echo --help
+  exit 0
+fi
 
 # Function to update configuration's files
 # Arguments
@@ -77,7 +90,7 @@ function change_apache_global {
 }
 
 # Config getopt
-TEMP=`getopt -o '' --long apache -n $PROG -- "$@"`
+TEMP=`getopt -o a,u --long apache,unset -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default value of apache
@@ -86,12 +99,24 @@ MODE=php
 # Parse arguments
 while true ; do
   case "$1" in
-    --apache)
+    -a|--apache)
       MODE=apache
+      shift;;
+    --unset)
+      ACTION=unset
       shift;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac
 done
+
+if [ "$ACTION" = "unset" ]; then
+  if [ "$MODE" = "apache" ]; then
+    sed -i "/PHP_SERVER_DOCKER_IMAGE/d" $MAIN_PATH/etc/php_global
+  else
+    sed -i "/PHP_CLI_DOCKER_IMAGE/d" $MAIN_PATH/etc/php_global
+  fi
+  exit 0
+fi
 
 change_${MODE}_global $1

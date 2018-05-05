@@ -19,6 +19,18 @@ set -e
 # Set config variables
 COMMAND=`basename $0 | cut -d- -f2`
 
+# Provide phpdock completions
+if [ "$1" = "--complete" ]; then
+  if [ $# -gt 1 ]; then
+    exit 0
+  fi
+  echo --list
+  echo --add
+  echo --delete
+  echo --help
+  exit 0
+fi
+
 # Avaiables repositories
 if [ ! -f "$MAIN_PATH/etc/repositories" ]
 then
