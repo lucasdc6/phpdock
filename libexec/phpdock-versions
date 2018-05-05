@@ -30,8 +30,8 @@ PHP_IMAGES=( $(cat $MAIN_PATH/etc/repositories) )
 function show_versions {
   for IMAGE in "${PHP_IMAGES[@]}"
   do
-    docker images | awk -v image=$IMAGE -v tag=$1 '($1 == image) && ($2 ~ tag) {print $1":"$2;}' | tee $MAIN_PATH/etc/$1_versions
-  done
+    docker images | awk -v image=$IMAGE -v tag=$1 '($1 == image) && ($2 ~ tag) {print $1":"$2;}'
+  done | tee $MAIN_PATH/etc/$1_versions
 }
 
 # Config getopt
