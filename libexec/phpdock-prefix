@@ -24,6 +24,11 @@ elif [ -z "$PHP_CLI_DOCKER_IMAGE" ]; then
   PHP_CLI_DOCKER_IMAGE="$(phpdock-version-name)"
 fi
 
+if [ "$PHP_CLI_DOCKER_IMAGE" = "system" ]; then
+  whereis -b php | awk '{print $2}'
+  exit 0
+fi
+
 containsElement () {
   local e match="$1"
   shift

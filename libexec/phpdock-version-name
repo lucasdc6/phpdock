@@ -50,4 +50,5 @@ elif phpdock global $PARAM > /dev/null; then
   cat $PHPDOCKPATH/etc/$MODE-version
 else
   echo "No php version setted ($MODE)"
+  exit 1
 fi

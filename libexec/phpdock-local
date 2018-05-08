@@ -27,6 +27,7 @@ if [ "$1" = "--complete" ]; then
   if echo $@ | grep "\-\-apache" > /dev/null; then
     cat $MAIN_PATH/etc/apache_versions
   else
+    echo system
     cat $MAIN_PATH/etc/cli_versions
   fi
   echo --apache
