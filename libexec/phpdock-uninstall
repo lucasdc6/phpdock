@@ -24,22 +24,22 @@ if [ "$1" = "--complete" ]; then
     cat $MAIN_PATH/etc/cli_versions
   fi
   echo --force
-  echo --apache
   echo --help
   exit 0
 fi
 
-[ "$#" -eq 0 ] && ( phpdock-help $COMMAND; exit 0 )
+[ "$#" -eq 0 ] && phpdock-help $COMMAND && exit
 
 # Function to uninstall a php version
 # Arguments
 #   1: php version
 function uninstall_php_version {
   docker image rm $1 -f
-  echo -e "\n$option removed\n"
+  echo -e "\n$1 removed\n"
   VERSIONS=( `phpdock-versions` )
-  [ `phpdock-global` = "$1" ] && ( phpdock-global ${VERSIONS[0]})
-  exit 1
+  ACTUAL_VERSION=`phpdock-global || true`
+  [ "$ACTUAL_VERSION" = "$1" ] && phpdock-global ${VERSIONS[0]}
+  exit 0
 }
 
 # Function to generate versions list from repositories
@@ -88,9 +88,11 @@ while true ; do
   esac
 done
 
+[ "$OPTIONS" = "-f" ] && uninstall_php_version $1 && exit 0
+
 VERSION=(`phpdock versions | grep "$1" || true`)
 
-[ "${#VERSION[@]}" -eq 0 ] && ( echo "phpdock: version \`$1' not installed"; exit 1 )
+[ ${#VERSION[@]} -eq 0 ] && ( echo "phpdock: version \`$1' not installed"; exit 1 )
 
 VERSION=(${VERSION[@]} "exit")
 createmenu ${VERSION[@]}
