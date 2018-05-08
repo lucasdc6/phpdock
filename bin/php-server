@@ -1,19 +1,28 @@
 #!/bin/bash
 
-set -e 
+PHP_SERVER_DOCKER_IMAGE=`phpdock version-name --apache`
 
-[ -z "$PHP_SERVER_DOCKER_IMAGE" ] && ( echo You must set PHP_SERVER_DOCKER_IMAGE environment variable ; exit 1)
-
+if [ $? -eq 1 ]; then
+  echo "You must set a apache-php version"
+  echo "See 'phpdock' command"
+  exit 0
+fi
 [ "$1" = "-v" ] && ( echo $PHP_SERVER_DOCKER_IMAGE; exit 1)
 
 PHP_SERVER_PORT=$1
 
-[ -z "$PHP_SERVER_PORT" ] && ( echo You must specify wich port to use as parameter; exit 1)
+if [ -z "$PHP_SERVER_PORT" ]; then
+  echo You must specify wich port to use as parameter
+  exit 1
+fi
 
 #if $1 was set, the remove it
 shift
 
-[ "$PHP_SERVER_PORT" -lt 1024 ] && (echo port must be greater than 1024; exit 1)
+if [ "$PHP_SERVER_PORT" -lt 1024 ]; then
+  echo port must be greater than 1024
+  exit 1
+fi
 
 PHP_SERVER_DOCKER_LOGS=${PHP_SERVER_DOCKER_LOGS:-'/tmp/apache.logs'}
 
