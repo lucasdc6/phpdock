@@ -37,10 +37,6 @@ function upsearch {
   done
 }
 
-PHP_VERSION_FILE=`upsearch ".php-version"`
-
-# Show help if non arguments passed to script
-[ "$#" -eq 0 -a -z "$PHP_VERSION_FILE" ] && ( phpdock-help $COMMAND; exit 1)
 
 # Config getopt
 TEMP=`getopt -o l --long list,apache -n $PROG -- "$@"`
@@ -62,14 +58,14 @@ function install_php_version
   if [ "$1" ]
   then
     docker pull $1
-  elif [ -f ".envrc" ]
+  elif [ -f ".php-version" ]
   then
-    echo -e "php version taken from file .envrc\n"
-    cat .envrc | grep "PHP_CLI_DOCKER_IMAGE" | cut -d= -f2 | xargs docker pull
-  elif [ -f "$MAIN_PATH/etc/php_global" ]
+    echo -e "php version taken from file .php-version\n"
+    cat .cli-version | xargs docker pull
+  elif [ -f "$MAIN_PATH/etc/cli-version" ]
   then
-    echo -e "php version taken from file $MAIN_PATH/etc/php_global\n"
-    cat $MAIN_PATH/etc/php_global | cut -d= -f2 | xargs docker pull
+    echo -e "php version taken from file $MAIN_PATH/etc/cli-version\n"
+    cat $MAIN_PATH/etc/cli-version | xargs docker pull
   else
     echo "Please specify a php version"
   fi
@@ -130,7 +126,7 @@ function createmenu {
 
 # default value of apache
 OPT="install"
-TYPE="cli"
+MODE="cli"
 
 # Parse arguments
 while true ; do
@@ -139,7 +135,7 @@ while true ; do
       OPT="list"
       shift;;
     --apache)
-      TYPE="apache"
+      MODE="apache"
       shift;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
@@ -147,12 +143,17 @@ while true ; do
 done
 
 PHP_VERSION=$1
+PHP_VERSION_FILE=`upsearch ".$MODE-version"`
+
+# Show help if non arguments passed to script
+[ -z "$PHP_VERSION" -a -z "$PHP_VERSION_FILE" ] && ( phpdock-help $COMMAND; exit 1)
+
 
 case "$OPT" in
   install)
     if [ -z $1 ]; then
       PHP_VERSION=`cat $PHP_VERSION_FILE`
-      VERSIONS=(`list_php_versions $TYPE true | grep $PHP_VERSION || true`)
+      VERSIONS=(`list_php_versions $MODE true | grep $PHP_VERSION || true`)
       [ "${#VERSIONS[@]}" -eq 0 ] && ( echo "phpdock: version not found: $PHP_VERSION"; exit 1)
       VERSIONS=(${VERSIONS[@]} "exit")
       createmenu "${VERSIONS[@]}"
@@ -162,6 +163,6 @@ case "$OPT" in
     fi
     ;;
   list)
-    list_php_versions $TYPE
+    list_php_versions $MODE
   ;;
 esac
