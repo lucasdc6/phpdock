@@ -2,29 +2,41 @@
 # Summary: Display prefix for a php docker version
 # Usage: phpdock prefix [<version>]
 #
-# Displays complete image name of a php version.. If no
+# Displays complete image name of a php version. If no
 # version is given, `phpdock prefix' displays the location of the
 # currently selected version.
 
 set -e
 [ -n "$PHPDOCK_DEBUG" ] && set -x
 
-# Provide rbenv completions
+# Provide phpdock completions
 if [ "$1" = "--complete" ]; then
-  echo system
-  exec phpdock-versions --bare
+  if [ "$#" -eq 1 ]; then
+    echo system
+    echo --help
+  fi
+  exit 0
 fi
 
 if [ -n "$1" ]; then
-  export PHP_CLI_DOCKER_IMAGE="$1"
+  PHP_CLI_DOCKER_IMAGE="$1"
 elif [ -z "$PHP_CLI_DOCKER_IMAGE" ]; then
   PHP_CLI_DOCKER_IMAGE="$(phpdock-version-name)"
 fi
 
-PHPDOCK_PREFIX=`docker images --format "{{.Repository}}:{{.Tag}}" | grep $PHP_CLI_DOCKER_IMAGE`
-if [ ! -d "$PHPDOCK_PREFIX" ]; then
+containsElement () {
+  local e match="$1"
+  shift
+  for e; do [[ "$e" == "$match" ]] && return 0; done
+  return 1
+}
+
+
+PHPDOCK_PREFIX=(`docker images --format "{{.Repository}}:{{.Tag}}" $PHP_CLI_DOCKER_IMAGE`)
+
+if ! containsElement $PHP_CLI_DOCKER_IMAGE ${PHPDOCK_PREFIX[@]} ; then
   echo "phpdock: version \`${PHP_CLI_DOCKER_IMAGE}' not installed" >&2
   exit 1
 fi
 
-echo "$RBENV_PREFIX_PATH"
+echo $PHPDOCK_PREFIX

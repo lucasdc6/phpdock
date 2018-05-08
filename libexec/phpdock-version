@@ -19,6 +19,7 @@ COMMAND=`basename $0 | cut -d- -f2`
 # Provide phpdock completions
 if [ "$1" = "--complete" ]; then
   if [ "$#" -eq 1 ]; then
+    echo --apache
     echo --help
   fi
   exit 0
@@ -38,20 +39,25 @@ function upsearch {
 TEMP=`getopt -o '' --long apache,name -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
+MODE=cli
 # Parse arguments
 while true ; do
   case "$1" in
     --apache)
-      APACHE="--apache"
+      MODE=apache
+      PARAM=--apache
       shift;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
   esac
 done
 
-if phpdock local > /dev/null; then
-  ENVRC=`upsearch ".envrc"`
-  echo "`phpdock-local $APACHE` (set by `realpath $ENVRC`)"
+if phpdock local $PARAMS > /dev/null; then
+  PHPVERSION=`upsearch ".$MODE-version"`
+  echo "`phpdock-local $PARAM` (set by `realpath $PHPVERSION`)"
+elif phpdock global $PARAM > /dev/null; then
+  echo "`phpdock-global $PARAM` (set by $MAIN_PATH/etc/$MODE-version)"
 else
-  echo "`phpdock-global $APACHE` (set by $MAIN_PATH/etc/php_global)"
+  echo "No php version setted ($MODE)"
+  exit 1
 fi

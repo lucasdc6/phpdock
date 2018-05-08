@@ -75,7 +75,7 @@ case "$command" in
     } | abort
     ;;
   -v | --version )
-    exec phpdock---version
+    cat $PHPDOCKPATH/VERSION
     ;;
   -h | --help )
     exec phpdock-help
