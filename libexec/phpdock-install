@@ -62,6 +62,7 @@ function install_php_version
   then
     echo -e "php version taken from file .php-version\n"
     cat .php-version | xargs docker pull
+    phpdock-local $1
   else
     echo "Please specify a php version"
   fi
