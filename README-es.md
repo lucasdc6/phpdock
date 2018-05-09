@@ -1,6 +1,6 @@
 # phpdock
 
-phpdock es un manejador de versiones de php locales, que utiliza como principal
+phpdock es un manejador de versiones de php, que utiliza como principal
 tecnología [Docker](https://github.com/docker), haciendo uso del 
 [repositorio oficial](https://hub.docker.com/\_/php/) de php en Docker Hub.
 
@@ -27,15 +27,16 @@ phpdock fue inspirado y sigue el modelo de [rbenv](https://github.com/rbenv/rben
 $ git clone git@github.com:lucasdc6/phpdock.git ~/.phpdock
 ```
 
-2. Agregar el directorio ~/.phpdock/bin para contar con todos los ejecutables
+2. Agregar la variable de ambiente y el  directorio ~/.phpdock/bin 
+para contar con todos los ejecutables
 ```bash
+$ echo 'export PHPDOCKPATH=$HOME/.phpdock' >> ~/.bash_profile
 $ echo 'export PATH="$HOME/.phpdock/bin:$PATH"' >> ~/.bash_profile
 ```
 
-3. Agregar el archivo php_global y la variable PHPDOCKPATH al bashrc
+3. Agregar la sentencia eval al bashrc
 ```bash
-$ echo 'source ~/.phpdock/etc/php_global' >> ~/.bash_profile
-$ echo 'export PHPDOCKPATH="$HOME/.phpdock"' >> ~/.bash_profile
+$ echo 'eval "$(phpdock init -)' >> ~/.bash_profile
 ```
 En Ubuntu modificar ~/.bashrc
 
@@ -111,6 +112,25 @@ Variable | Descripción
 `PHP_SERVER_DOCKER_IMAGE` | Variable para especificar versión de imagen php con apache
 `PHPDOCK_DEBUG` | Muestra información de debug
 `PHPDOCKPATH` | Dirección raíz del programa phpdock
+
+## Archivos de versiones
+
+### Versión global
+
+- Archivo modificado por el comando `phpdock global <version>`
+- Guardado en `$PHPDOCKPATH/etc/php-version` y `$PHPDOCKPATH/etc/apache-version`
+- Baja precedencia.
+
+### Versión local
+
+- Archivo modificado por el comando `phpdock local <version>`
+- Guardado en el contexto de ejecución del comando
+- Media precedencia.
+
+### Versión de la shell (En desarrollo!)
+
+- Manejado mediante variables de ambiente por el comando `phpdock shell <version>`
+-Alta precedencia.
 
 ## Instalar una versión de php
 
