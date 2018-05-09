@@ -6,7 +6,7 @@
 # Set or show php local version setted in .envrc files
 # By default, show php cli version
 #
-# When you run a php command, phpdock will look for a '.cli-version'
+# When you run a php command, phpdock will look for a '.php-version'
 # or '.apache-version' file in the current directory and each parent
 # directory. If no such file is found in the tree, phpdock will use
 # the global php version specified with 'phpdock global'.
@@ -25,14 +25,17 @@ COMMAND=`basename $0 | cut -d- -f2`
 # Provide phpdock completions
 if [ "$1" = "--complete" ]; then
   if echo $@ | grep "\-\-apache" > /dev/null; then
-    cat $MAIN_PATH/etc/apache_versions
-  else
+    cat $MAIN_PATH/etc/versions/apache
+    echo --unset
+  elif echo $@ | grep -v "\-\-help" > /dev/null; then
     echo system
-    cat $MAIN_PATH/etc/cli_versions
+    echo --apache
+    echo --unset
+    cat $MAIN_PATH/etc/versions/php
   fi
-  echo --apache
-  echo --unset
-  echo --help
+  if [ "$#" -eq 1 ]; then
+    echo --help
+  fi
   exit 0
 fi
 
@@ -53,6 +56,7 @@ function change_local {
   PHPVERSION=`upsearch ".$1-version"`
   if [ "$2" ]
   then
+    phpdock-prefix $2 > /dev/null
     echo $2 > ".$1-version"
     echo "Local php version setted to $2 in file .$1-version"
   elif [ -n "$PHPVERSION" ]
@@ -70,7 +74,7 @@ TEMP=`getopt -o '' --long apache,unset -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default value of apache
-MODE=cli
+MODE=php
 OPTION=set
 
 # Parse arguments

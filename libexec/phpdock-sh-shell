@@ -23,21 +23,25 @@ set -e
 
 # Provide phpdock completions
 if [ "$1" = "--complete" ]; then
-  if [ $# -eq 1 ]; then
-    cat $MAIN_PATH/etc/cli_versions
-  else
-    cat $MAIN_PATH/etc/apache_versions
+  if echo $@ | grep "\-\-apache" > /dev/null; then
+    cat $MAIN_PATH/etc/versions/apache
+    echo --unset
+  elif echo $@ | grep -v "\-\-help" > /dev/null; then
+    echo system
+    echo --apache
+    echo --unset
+    cat $MAIN_PATH/etc/versions/php
   fi
-  echo --unset
-  echo --apache
-  echo --help
+  if [ "$#" -eq 1 ]; then
+    echo --help
+  fi
   exit 0
 fi
 
 # Config getopt
 TEMP=`getopt -o a,u --long apache,unset -n $PROG -- "$@"`
 eval set -- "$TEMP"
-MODE=cli
+MODE=php
 
 # Parse arguments
 while true ; do
