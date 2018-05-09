@@ -1,6 +1,6 @@
 # phpdock
 
-phpdock is a version manager from the language php, powered with
+phpdock is a php's version manager, powered with
 [Docker](https://github.com/docker), using principally the
 [oficial php repository](https://hub.docker.com/\_/php/) in Docker Hub.
 
@@ -27,22 +27,21 @@ phpdock is inspired in [rbenv](https://github.com/rbenv/rbenv),
 $ git clone git@github.com:lucasdc6/phpdock.git ~/.phpdock
 ```
 
-2. Add to the directory ~/.phpdock/bin to `$PATH`
+2. Add the envoiroment variable PHPDOCKPATH and the directory $PHPDOCKPATH/bin to `$PATH`
 ```bash
+$ echo 'export PHPDOCKPATH=$HOME/.phpdock' >> ~/.bash_profile
 $ echo 'export PATH="$HOME/.phpdock/bin:$PATH"' >> ~/.bash_profile
 ```
 
-3. Add the file php_global and the variable eval sentence to the bashrc
+3. Add the eval sentence to the bashrc
 ```bash
-eval "$(phpdock init -)
-$ echo 'source ~/.phpdock/etc/php_global' >> ~/.bash_profile
+$ echo 'eval "$(phpdock init -)' >> ~/.bash_profile
 ```
 *Ubuntu desktop note:* Modify your `~/.bashrc` instead of `~/.bash_profile`
 
 *Zsh note:* Modify ~/.zshrc
 
-4. Restart your shell so that PATH changes take effect. (Opening a new terminal
-tab will usually do it.)
+4. Restart your shell so that PATH changes take effect.
 
 
 ## Use
@@ -96,8 +95,8 @@ Add the oficial php repository (added by default)
 ## Environment variables
 
 The script *doesn't* install php binaries!
-The script pull docker images and reference those images via envoiroment
-varialbes, used by the scripts `php` and `php-server`
+The script pull docker images and reference those images via files and 
+envoiroment varialbes, used by the scripts `php` and `php-server`
 
 Variable | Description
 ---------|------------
@@ -105,6 +104,23 @@ Variable | Description
 `PHP_SERVER_DOCKER_IMAGE` | Specify a docker image to `php-server` script
 `PHPDOCK_DEBUG` | Enable debug mode
 `PHPDOCKPATH` | Root path to repository
+
+## Version files
+
+### Global version
+
+- File modified by the command `phpdock global <version>`
+- Stored at `$PHPDOCKPATH/etc/php-version` and `$PHPDOCKPATH/etc/apache-version`
+- Low precedence
+
+### Local version
+- File modified by the command `phpdock local <version>`
+- Stored in the command's context execution
+- Medium precedence
+
+### Shell version (Comming soon!)
+- Via envoiroment variables modified by the command `phpdock shell <version>`
+- High precedence
 
 ## Install php version
 
