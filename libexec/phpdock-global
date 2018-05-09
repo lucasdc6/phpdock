@@ -78,7 +78,7 @@ while true ; do
 done
 
 if [ "$ACTION" = "unset" ]; then
-  rm $MAIN_PATH/etc/${MODE}-version
+  rm $MAIN_PATH/etc/$MODE-version
   exit 0
 fi
 

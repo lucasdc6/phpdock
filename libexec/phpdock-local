@@ -53,12 +53,12 @@ function upsearch {
 # Arguments
 #   1: version to set as local
 function change_local {
-  PHPVERSION=`upsearch ".$1-version"`
+  PHPVERSION=`upsearch ".$1-local-version"`
   if [ "$2" ]
   then
     phpdock-prefix $2 > /dev/null
-    echo $2 > ".$1-version"
-    echo "Local php version setted to $2 in file .$1-version"
+    echo $2 > ".$1-local-version"
+    echo "Local php version setted to $2 in file .$1-local-version"
   elif [ -n "$PHPVERSION" ]
   then
     cat $PHPVERSION
@@ -96,6 +96,6 @@ case "$OPTION" in
     change_local $MODE $1
   ;;
   unset)
-    PHPVERSION=`upsearch ".$MODE-version"`
+    PHPVERSION=`upsearch ".$MODE-local-version"`
     rm $PHPVERSION
 esac

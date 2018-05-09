@@ -44,7 +44,7 @@ while true ; do
 done
 
 if phpdock local $PARAM > /dev/null; then
-  PHPVERSION=`upsearch ".$MODE-version"`
+  PHPVERSION=`upsearch ".$MODE-local-version"`
   cat $PHPVERSION
 elif phpdock global $PARAM > /dev/null; then
   cat $PHPDOCKPATH/etc/$MODE-version

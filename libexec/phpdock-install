@@ -62,10 +62,6 @@ function install_php_version
   then
     echo -e "php version taken from file .php-version\n"
     cat .php-version | xargs docker pull
-  elif [ -f "$MAIN_PATH/etc/php-version" ]
-  then
-    echo -e "php version taken from file $MAIN_PATH/etc/php-version\n"
-    cat $MAIN_PATH/etc/php-version | xargs docker pull
   else
     echo "Please specify a php version"
   fi
@@ -124,18 +120,17 @@ function createmenu {
   done
 }
 
-# default value of apache
-OPT="install"
-MODE="cli"
+OPT=install
+MODE=cli
 
 # Parse arguments
 while true ; do
   case "$1" in
     -l|--list)
-      OPT="list"
+      OPT=list
       shift;;
     --apache)
-      MODE="apache"
+      MODE=apache
       shift;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
@@ -143,7 +138,7 @@ while true ; do
 done
 
 PHP_VERSION=$1
-PHP_VERSION_FILE=`upsearch ".$MODE-version"`
+PHP_VERSION_FILE=`upsearch ".php-version"`
 
 # Show help if non arguments passed to script
 [ -z "$PHP_VERSION" -a -z "$PHP_VERSION_FILE" ] && ( phpdock-help $COMMAND; exit 1)
