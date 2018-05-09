@@ -61,11 +61,11 @@ function install_php_version
   elif [ -f ".php-version" ]
   then
     echo -e "php version taken from file .php-version\n"
-    cat .cli-version | xargs docker pull
-  elif [ -f "$MAIN_PATH/etc/cli-version" ]
+    cat .php-version | xargs docker pull
+  elif [ -f "$MAIN_PATH/etc/php-version" ]
   then
-    echo -e "php version taken from file $MAIN_PATH/etc/cli-version\n"
-    cat $MAIN_PATH/etc/cli-version | xargs docker pull
+    echo -e "php version taken from file $MAIN_PATH/etc/php-version\n"
+    cat $MAIN_PATH/etc/php-version | xargs docker pull
   else
     echo "Please specify a php version"
   fi
