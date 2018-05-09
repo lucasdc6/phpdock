@@ -39,7 +39,7 @@ function upsearch {
 TEMP=`getopt -o '' --long apache,name -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
-MODE=cli
+MODE=php
 # Parse arguments
 while true ; do
   case "$1" in

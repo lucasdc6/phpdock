@@ -24,14 +24,17 @@ COMMAND=`basename $0 | cut -d- -f2`
 # Provide phpdock completions
 if [ "$1" = "--complete" ]; then
   if echo $@ | grep "\-\-apache" > /dev/null; then
-    cat $MAIN_PATH/etc/apache_versions
-  else
+    cat $MAIN_PATH/etc/versions/apache
+    echo --unset
+  elif echo $@ | grep -v "\-\-help" > /dev/null; then
     echo system
-    cat $MAIN_PATH/etc/cli_versions
+    echo --apache
+    echo --unset
+    cat $MAIN_PATH/etc/versions/php
   fi
-  echo --unset
-  echo --apache
-  echo --help
+  if [ "$#" -eq 1 ]; then
+    echo --help
+  fi
   exit 0
 fi
 
@@ -41,6 +44,7 @@ fi
 function change_global {
   if [ "$2" ]
   then
+    phpdock-prefix $2 > /dev/null
     echo $2 > "$MAIN_PATH/etc/${1}-version"
     echo "Global php version setted to $2 in file $MAIN_PATH/etc/${1}-version"
   elif [ -f "$MAIN_PATH/etc/${1}-version" ]
@@ -57,7 +61,7 @@ TEMP=`getopt -o a,u --long apache,unset -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default value of apache
-MODE=cli
+MODE=php
 
 # Parse arguments
 while true ; do
