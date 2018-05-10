@@ -147,6 +147,7 @@ PHP_VERSION_FILE=`upsearch ".php-version"`
 case "$OPT" in
   install)
     if [ -z $1 ]; then
+      echo -e "Searching available php versions\n"
       PHP_VERSION=`cat $PHP_VERSION_FILE`
       VERSIONS=(`list_php_versions $MODE true | grep $PHP_VERSION || true`)
       [ "${#VERSIONS[@]}" -eq 0 ] && ( echo "phpdock: version not found: $PHP_VERSION"; exit 1)
