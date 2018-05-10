@@ -121,11 +121,6 @@ function createmenu {
   done
 }
 
-PHP_VERSION=$1
-PHP_VERSION_FILE=`upsearch ".php-version"`
-
-# Show help if non arguments passed to script
-[ -z "$PHP_VERSION" -a -z "$PHP_VERSION_FILE" ] && ( phpdock-help $COMMAND; exit 1)
 OPT=install
 MODE=cli
 
@@ -142,6 +137,12 @@ while true ; do
     *) echo "Internal error!" ; exit 1 ;;
   esac
 done
+
+PHP_VERSION=$1
+PHP_VERSION_FILE=`upsearch ".php-version"`
+
+# Show help if non arguments passed to script
+[ -z "$PHP_VERSION" -a -z "$PHP_VERSION_FILE" ] && ( phpdock-help $COMMAND; exit 1)
 
 case "$OPT" in
   install)
