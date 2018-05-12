@@ -25,13 +25,13 @@ COMMAND=`basename $0 | cut -d- -f2`
 # Provide phpdock completions
 if [ "$1" = "--complete" ]; then
   if echo $@ | grep "\-\-apache" > /dev/null; then
-    cat $MAIN_PATH/etc/versions/apache
+    [ -f $MAIN_PATH/etc/versions/apache ] && cat $MAIN_PATH/etc/versions/apache
     echo --unset
   elif echo $@ | grep -v "\-\-help" > /dev/null; then
     echo system
     echo --apache
     echo --unset
-    cat $MAIN_PATH/etc/versions/php
+    [ -f $MAIN_PATH/etc/versions/php ] && cat $MAIN_PATH/etc/versions/php
   fi
   if [ "$#" -eq 1 ]; then
     echo --help
