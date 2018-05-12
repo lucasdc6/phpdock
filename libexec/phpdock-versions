@@ -31,7 +31,7 @@ function show_versions {
   for IMAGE in "${PHP_IMAGES[@]}"
   do
     docker images | awk -v image=$IMAGE -v tag=$1 '($1 == image) && ($2 ~ tag) {print $1":"$2;}'
-  done | tee $MAIN_PATH/etc/$1_versions
+  done | tee $MAIN_PATH/etc/versions/$FILE
 }
 
 # Config getopt
@@ -39,13 +39,15 @@ TEMP=`getopt -o '' --long apache -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # default mode value
-MODE="cli"
+MODE=cli
+FILE=php
 
 # Parse arguments
 while true ; do
   case "$1" in
     --apache)
-      MODE="apache"
+      MODE=apache
+      FILE=apache
       shift;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
