@@ -1,7 +1,7 @@
 #!/bin/bash
 # Summary: Install a php docker image from repositories
-# Usage: phpdock install <version>
-#        phpdock install -l/--list
+# Usage: phpdock install <version> [-a/--apache]
+#        phpdock install -l/--list [-a/--apache]
 #
 #  -l/--list   List all available versions
 #              By default show php-cli versions
@@ -39,7 +39,7 @@ function upsearch {
 
 
 # Config getopt
-TEMP=`getopt -o l --long list,apache -n $PROG -- "$@"`
+TEMP=`getopt -o a,l --long list,apache -n $PROG -- "$@"`
 eval set -- "$TEMP"
 
 # Avaiables repositories
@@ -130,7 +130,7 @@ while true ; do
     -l|--list)
       OPT=list
       shift;;
-    --apache)
+    -a|--apache)
       MODE=apache
       shift;;
     --) shift ; break ;;
@@ -142,12 +142,11 @@ PHP_VERSION=$1
 PHP_VERSION_FILE=`upsearch ".php-version"`
 
 # Show help if non arguments passed to script
-[ -z "$PHP_VERSION" -a -z "$PHP_VERSION_FILE" ] && ( phpdock-help $COMMAND; exit 1)
+[ -z "$PHP_VERSION" -a -z "$PHP_VERSION_FILE" -a "$OPT" = "install" ] && ( phpdock-help $COMMAND; exit 1)
 
 case "$OPT" in
   install)
     if [ -z $1 ]; then
-      echo -e "Searching available php versions\n"
       PHP_VERSION=`cat $PHP_VERSION_FILE`
       VERSIONS=(`list_php_versions $MODE true | grep $PHP_VERSION || true`)
       [ "${#VERSIONS[@]}" -eq 0 ] && ( echo "phpdock: version not found: $PHP_VERSION"; exit 1)
