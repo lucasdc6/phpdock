@@ -45,7 +45,7 @@ while true ; do
   case "$1" in
     --apache)
       MODE=apache
-      PARAM=--apache
+      PARAMS=--apache
       shift;;
     --) shift ; break ;;
     *) echo "Internal error!" ; exit 1 ;;
