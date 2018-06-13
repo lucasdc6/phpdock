@@ -36,18 +36,18 @@ while true ; do
 done
 
 if [ -n "$1" ]; then
-  PHP_CLI_DOCKER_IMAGE="$1"
-elif [ -z "$PHP_CLI_DOCKER_IMAGE" ]; then
-  PHP_CLI_DOCKER_IMAGE="$(phpdock-version-name $PARAM)"
+  PHP_DOCKER_IMAGE="$1"
+elif [ -z "$PHP_DOCKER_IMAGE" ]; then
+  PHP_DOCKER_IMAGE="$(phpdock-version-name $PARAM)"
   # Exit if no version setted
   if [ $? -ne 0 ]; then
-    echo $PHP_CLI_DOCKER_IMAGE
+    echo $PHP_DOCKER_IMAGE
     exit 1
   fi
 fi
 
 
-if [ "$PHP_CLI_DOCKER_IMAGE" = "system" ]; then
+if [ "$PHP_DOCKER_IMAGE" = "system" ]; then
   whereis -b php | awk '{print $2}'
   exit 0
 fi
@@ -59,10 +59,10 @@ containsElement () {
   return 1
 }
 
-PHPDOCK_PREFIX=(`docker images --format "{{.Repository}}:{{.Tag}}" | grep $MODE | grep $PHP_CLI_DOCKER_IMAGE`)
+PHPDOCK_PREFIX=(`docker images --format "{{.Repository}}:{{.Tag}}" | grep $MODE | grep $PHP_DOCKER_IMAGE`)
 
-if ! containsElement $PHP_CLI_DOCKER_IMAGE ${PHPDOCK_PREFIX[@]} ; then
-  echo "phpdock: version \`${PHP_CLI_DOCKER_IMAGE}' not installed $MODE" >&2
+if ! containsElement $PHP_DOCKER_IMAGE ${PHPDOCK_PREFIX[@]} ; then
+  echo "phpdock: version \`${PHP_DOCKER_IMAGE}' not installed $MODE" >&2
   exit 1
 fi
 
